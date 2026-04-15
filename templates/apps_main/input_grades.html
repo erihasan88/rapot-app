@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Input Nilai{% endblock %}
+{% block page_icon %}<i class="fas fa-edit text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Selection Header -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div class="flex items-center space-x-3 mb-6">
+            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-primary">
+                <i class="fas fa-filter text-sm"></i>
+            </div>
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pilih Mata Pelajaran & Kelas</h3>
+        </div>
+        
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <div class="space-y-2">
+                <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Penugasan</label>
+                <div class="relative">
+                    <select name="ts_id" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 appearance-none cursor-pointer">
+                        <option value="">-- Pilih Penugasan --</option>
+                        {% for ts in teacher.teachersubject_set.all %}
+                        <option value="{{ ts.id }}" {% if request.GET.ts_id == ts.id|stringformat:"s" %}selected{% endif %}>
+                            {{ ts.subject.name }} - {{ ts.class_level.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-slate-400">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/20 transition-all">
+                    TAMPILKAN SISWA
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if students %}
+    {% if class_stats %}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Jumlah Nilai</p>
+            <p class="text-xl font-black text-slate-900">{{ class_stats.total|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Rata-Rata</p>
+            <p class="text-xl font-black text-slate-900">{{ class_stats.avg|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Daya Serap</p>
+            <p class="text-xl font-black text-slate-900">{{ class_stats.absorption|floatformat:2 }}%</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nilai Tertinggi</p>
+            <p class="text-xl font-black text-slate-900">{{ class_stats.max|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nilai Terendah</p>
+            <p class="text-xl font-black text-slate-900">{{ class_stats.min|floatformat:2 }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <form method="post" action="{% url 'input_grades' %}?ts_id={{ request.GET.ts_id }}">
+            {% csrf_token %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                            <th class="px-8 py-5 w-80">Nama Siswa</th>
+                            <th class="px-8 py-5 w-24 text-center">Harian</th>
+                            <th class="px-8 py-5 w-24 text-center">UTS</th>
+                            <th class="px-8 py-5 w-24 text-center">UAS</th>
+                            <th class="px-8 py-5 w-28 text-center">Rapor</th>
+                            <th class="px-8 py-5 w-24 text-center">Aktif</th>
+                            <th class="px-8 py-5 min-w-[260px]">Catatan Keaktifan</th>
+                            <th class="px-8 py-5">Deskripsi Capaian Kompetensi</th>
+                            <th class="px-8 py-5 text-center">Aksi Lainnya</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for student in students %}
+                        <tr class="hover:bg-slate-50/30 transition-colors group">
+                            <td class="px-8 py-5 min-w-[280px]">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-black text-slate-900">{{ student.user.get_full_name|default:student.user.username }}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NISN: {{ student.nisn|default:"-" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5">
+                                <input type="number" name="daily_{{ student.id }}" step="1" min="0" max="100" class="w-full min-w-[80px] px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 text-center" value="{{ student.current_grade.daily_test_grade|floatformat:0 }}" placeholder="0-100">
+                            </td>
+                            <td class="px-8 py-5">
+                                <input type="number" name="midterm_{{ student.id }}" step="1" min="0" max="100" class="w-full min-w-[80px] px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 text-center" value="{{ student.current_grade.midterm_grade|floatformat:0 }}" placeholder="0-100">
+                            </td>
+                            <td class="px-8 py-5">
+                                <input type="number" name="final_{{ student.id }}" step="1" min="0" max="100" class="w-full min-w-[80px] px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 text-center" value="{{ student.current_grade.final_exam_grade|floatformat:0 }}" placeholder="0-100">
+                            </td>
+                            <td class="px-8 py-5">
+                                <input type="text" readonly class="w-full min-w-[90px] px-4 py-3 bg-slate-100 border-none rounded-xl text-sm font-black text-slate-900 text-center" data-report-for="{{ student.id }}" value="{{ student.current_grade.numeric_grade|floatformat:0 }}" placeholder="Auto">
+                            </td>
+                            <td class="px-8 py-5">
+                                <input type="number" name="activity_{{ student.id }}" step="1" min="0" max="100" class="w-full min-w-[80px] px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 text-center" value="{{ student.current_activity.activity_score|floatformat:0 }}" placeholder="0-100">
+                            </td>
+                            <td class="px-8 py-5">
+                                <textarea name="activity_note_{{ student.id }}" class="w-full min-w-[240px] px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-xs font-medium text-slate-600" rows="2" placeholder="Catatan keaktifan siswa...">{{ student.current_activity.activity_note|default:'' }}</textarea>
+                            </td>
+                            <td class="px-8 py-5">
+                                <textarea name="desc_{{ student.id }}" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus-ring-primary text-xs font-medium text-slate-600" rows="2" placeholder="Tulis capaian kompetensi siswa di sini...">{{ student.current_grade.description|default:'' }}</textarea>
+                            </td>
+                            <td class="px-8 py-5 text-center">
+                                <a href="{% url 'student_detail_input' student.id %}" class="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-primary hover:text-white transition text-[10px] font-black uppercase tracking-wider">
+                                    <i class="fas fa-file-alt mr-2"></i> DATA RAPOR
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-8 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="px-10 py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/30 transition-all">
+                    <i class="fas fa-save mr-3"></i> SIMPAN SEMUA NILAI
+                </button>
+            </div>
+        </form>
+    </div>
+    {% elif request.GET.ts_id %}
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
+        <div class="flex flex-col items-center">
+            <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center text-orange-400 mb-6">
+                <i class="fas fa-user-slash text-3xl"></i>
+            </div>
+            <h4 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-2">Tidak Ada Siswa</h4>
+            <p class="text-sm font-medium text-slate-400 max-w-xs mx-auto">Belum ada siswa yang terdaftar di kelas ini.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function computeReportGrade(daily, midterm, finalExam, activity) {
+        const d = Number(daily);
+        const m = Number(midterm);
+        const f = Number(finalExam);
+        const a = Number(activity);
+
+        const parts = [];
+        if (Number.isFinite(d)) parts.push({ v: d, w: 0.40 });
+        if (Number.isFinite(m)) parts.push({ v: m, w: 0.30 });
+        if (Number.isFinite(f)) parts.push({ v: f, w: 0.30 });
+
+        let base = '';
+        if (parts.length) {
+            const totalW = parts.reduce((acc, p) => acc + p.w, 0);
+            const scaled = parts.map(p => ({ v: p.v, w: p.w / totalW }));
+            base = scaled.reduce((acc, p) => acc + (p.v * p.w), 0);
+        }
+
+        let result = null;
+        if (base !== '' && Number.isFinite(a)) result = (base * 0.90) + (a * 0.10);
+        else if (base !== '') result = base;
+        else if (Number.isFinite(a)) result = a;
+        else return '';
+
+        return String(Math.round(result));
+    }
+
+    function descriptionForScore(score) {
+        const n = Number(score);
+        if (!Number.isFinite(n)) return '';
+        if (n >= 90) return 'Siswa telah menguasai materi dengan sangat baik, mampu menerapkan konsep secara mandiri, serta menunjukkan pemahaman yang sangat kuat.';
+        if (n >= 80) return 'Siswa telah mencapai tujuan pembelajaran dengan baik, memahami konsep, namun masih perlu sedikit peningkatan dalam penerapannya.';
+        if (n >= 70) return 'Siswa memiliki pemahaman yang cukup, namun masih memerlukan bimbingan dalam menerapkan konsep.';
+        return 'Siswa belum mencapai tujuan pembelajaran dan memerlukan bimbingan intensif untuk meningkatkan pemahaman.';
+    }
+
+    function setupAutoDescriptions() {
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach((row) => {
+            const daily = row.querySelector('input[name^="daily_"]');
+            if (!daily) return;
+
+            const studentId = daily.name.replace('daily_', '');
+            const midterm = row.querySelector(`input[name="midterm_${studentId}"]`);
+            const finalExam = row.querySelector(`input[name="final_${studentId}"]`);
+            const activity = row.querySelector(`input[name="activity_${studentId}"]`);
+            const report = row.querySelector(`input[data-report-for="${studentId}"]`);
+            const desc = document.querySelector(`textarea[name="desc_${studentId}"]`);
+            if (!desc || !report) return;
+
+            desc.dataset.manual = desc.value && desc.value.trim() ? '1' : '0';
+            desc.addEventListener('input', () => {
+                desc.dataset.manual = '1';
+            });
+
+            function recalc() {
+                const computed = computeReportGrade(
+                    daily.value,
+                    midterm ? midterm.value : '',
+                    finalExam ? finalExam.value : '',
+                    activity ? activity.value : ''
+                );
+                report.value = computed;
+                if (desc.dataset.manual === '1') return;
+                const text = descriptionForScore(computed);
+                if (text) desc.value = text;
+            }
+
+            daily.addEventListener('input', recalc);
+            if (midterm) midterm.addEventListener('input', recalc);
+            if (finalExam) finalExam.addEventListener('input', recalc);
+            if (activity) activity.addEventListener('input', recalc);
+
+            recalc();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', setupAutoDescriptions);
+</script>
+{% endblock %}

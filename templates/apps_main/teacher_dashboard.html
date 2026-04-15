@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard Guru{% endblock %}
+{% block page_icon %}<i class="fas fa-th-large text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="md:col-span-2 space-y-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-6">Mata Pelajaran</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for ts in subjects %}
+                <div class="p-4 border border-gray-100 rounded-xl bg-slate-50 hover:border-slate-300 transition group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ ts.class_level.name }}</span>
+                        <i class="fas fa-book text-slate-400 group-hover:text-slate-600"></i>
+                    </div>
+                    <p class="font-bold text-gray-900">{{ ts.subject.name }}</p>
+                    <a href="{% url 'input_grades' %}?ts_id={{ ts.id }}" class="mt-4 inline-flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition">
+                        Input Nilai <i class="fas fa-chevron-right ml-2 text-xs"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Anda belum mengampu mata pelajaran apapun.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+            <form id="teacherPhotoForm" method="post" enctype="multipart/form-data" class="inline-block">
+                {% csrf_token %}
+                <div class="relative mx-auto w-24 h-24 rounded-full bg-slate-200 mb-4 overflow-hidden flex items-center justify-center text-slate-500 font-bold text-2xl">
+                    <div id="teacherPhotoPreview" class="w-full h-full">
+                        {% if user.photo %}
+                            <img src="{{ user.photo.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                {{ user.username.0|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <label class="absolute bottom-0 right-0 w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                        <i class="fas fa-camera text-xs"></i>
+                        <input type="file" name="photo" class="hidden" accept="image/*" onchange="submitTeacherPhoto(this)">
+                    </label>
+                </div>
+            </form>
+            <h3 class="font-bold text-gray-900 text-lg">{{ user.get_full_name }}</h3>
+            <p class="text-sm text-gray-500 mb-6">NIP: {{ teacher.nip|default:"-" }}</p>
+            <div class="border-t border-gray-100 pt-6">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-500">Username</span>
+                    <span class="font-medium text-gray-900">{{ user.username }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Email</span>
+                    <span class="font-medium text-gray-900">{{ user.email|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function submitTeacherPhoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('teacherPhotoPreview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+        document.getElementById('teacherPhotoForm').submit();
+    }
+</script>
+{% endblock %}
+
+

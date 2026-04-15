@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Data Nilai{% endblock %}
+{% block page_icon %}<i class="fas fa-book text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Tahun Ajaran Filter -->
+        <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Tahun Ajaran</label>
+            <div class="relative">
+                <select onchange="applyFilters()" id="filter_year" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus-ring-primary focus:border-[primary] transition-all text-sm font-medium appearance-none cursor-pointer">
+                    <option value="">Semua</option>
+                    {% for year in academic_years %}
+                    <option value="{{ year.id }}" {% if selected_year == year.id|stringformat:"i" %}selected{% endif %}>{{ year.year }} - {{ year.get_semester_display }}</option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mata Pelajaran Filter -->
+        <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Mata Pelajaran</label>
+            <div class="relative">
+                <select onchange="applyFilters()" id="filter_subject" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus-ring-primary focus:border-[primary] transition-all text-sm font-medium appearance-none cursor-pointer">
+                    <option value="">Semua</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-slate-400 text-sm font-normal border-b border-slate-100">
+                        <th class="px-8 py-5">Siswa</th>
+                        <th class="px-8 py-5">Mapel</th>
+                        <th class="px-8 py-5">Nilai</th>
+                        <th class="px-8 py-5">Deskripsi</th>
+                        <th class="px-8 py-5">Guru</th>
+                        <th class="px-8 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for grade in grades %}
+                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-medium text-slate-600">{{ grade.student.user.get_full_name }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-medium text-slate-600">{{ grade.subject.name }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center px-3 py-1 bg-slate-100 text-primary rounded-lg text-xs font-bold">
+                                {{ grade.numeric_grade|floatformat:0 }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm text-slate-500 max-w-xs truncate" title="{{ grade.description }}">{{ grade.description }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-medium text-slate-600">{{ grade.teacher.user.get_full_name }}</span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <button onclick="openGradeModal({
+                                id: '{{ grade.id }}',
+                                student: '{{ grade.student.user.get_full_name|escapejs }}',
+                                subject: '{{ grade.subject.name|escapejs }}',
+                                year: '{{ grade.academic_year.year|escapejs }} - {{ grade.academic_year.get_semester_display|escapejs }}',
+                                numeric_grade: '{{ grade.numeric_grade }}',
+                                description: '{{ grade.description|escapejs }}',
+                                teacher_id: '{{ grade.teacher.id }}'
+                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-8 py-20 text-center">
+                            <p class="text-sm font-medium text-slate-400">Belum ada data nilai</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Nilai Modal -->
+<div id="gradeModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeGradeModal()"></div>
+        <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+            <div class="px-10 py-8 flex items-center justify-between bg-white">
+                <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">EDIT NILAI</h3>
+                <button onclick="closeGradeModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form method="POST" action="" class="px-10 pb-10 space-y-8 max-h-[75vh] overflow-y-auto">
+                {% csrf_token %}
+                <input type="hidden" name="grade_id" id="field_grade_id">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Siswa</label>
+                        <input type="text" id="field_student" disabled class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Mata Pelajaran</label>
+                        <input type="text" id="field_subject" disabled class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tahun Ajaran</label>
+                        <input type="text" id="field_year" disabled class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nilai</label>
+                        <input type="number" name="numeric_grade" id="field_numeric_grade" step="0.01" min="0" max="100" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 text-center">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Guru</label>
+                        <div class="relative">
+                            <select name="teacher_id" id="field_teacher_id" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                {% for t in teachers %}
+                                <option value="{{ t.id }}">{{ t.user.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Deskripsi Capaian</label>
+                        <textarea name="description" id="field_description" rows="3" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-medium text-slate-600"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" class="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/30 transition-all">
+                        SIMPAN PERUBAHAN
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function applyFilters() {
+        const year = document.getElementById('filter_year').value;
+        const subject = document.getElementById('filter_subject').value;
+        
+        let url = new URL(window.location.href);
+        if (year) url.searchParams.set('year', year);
+        else url.searchParams.delete('year');
+        
+        if (subject) url.searchParams.set('subject', subject);
+        else url.searchParams.delete('subject');
+        
+        window.location.href = url.toString();
+    }
+
+    function openGradeModal(data) {
+        document.getElementById('field_grade_id').value = data.id;
+        document.getElementById('field_student').value = data.student;
+        document.getElementById('field_subject').value = data.subject;
+        document.getElementById('field_year').value = data.year;
+        document.getElementById('field_numeric_grade').value = data.numeric_grade;
+        document.getElementById('field_description').value = data.description || '';
+        document.getElementById('field_teacher_id').value = data.teacher_id;
+        document.getElementById('field_description').dataset.manual = (data.description && data.description.trim()) ? '1' : '0';
+
+        document.getElementById('gradeModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGradeModal() {
+        document.getElementById('gradeModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function descriptionForScore(score) {
+        const n = Number(score);
+        if (!Number.isFinite(n)) return '';
+        if (n >= 90) return 'Siswa telah menguasai materi dengan sangat baik, mampu menerapkan konsep secara mandiri, serta menunjukkan pemahaman yang sangat kuat.';
+        if (n >= 80) return 'Siswa telah mencapai tujuan pembelajaran dengan baik, memahami konsep, namun masih perlu sedikit peningkatan dalam penerapannya.';
+        if (n >= 70) return 'Siswa memiliki pemahaman yang cukup, namun masih memerlukan bimbingan dalam menerapkan konsep.';
+        return 'Siswa belum mencapai tujuan pembelajaran dan memerlukan bimbingan intensif untuk meningkatkan pemahaman.';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const gradeInput = document.getElementById('field_numeric_grade');
+        const desc = document.getElementById('field_description');
+        if (!gradeInput || !desc) return;
+
+        desc.addEventListener('input', () => {
+            desc.dataset.manual = '1';
+        });
+
+        gradeInput.addEventListener('input', () => {
+            if (desc.dataset.manual === '1') return;
+            const text = descriptionForScore(gradeInput.value);
+            if (text) desc.value = text;
+        });
+    });
+</script>
+{% endblock %}

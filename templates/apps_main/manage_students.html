@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Data Siswa{% endblock %}
+{% block page_icon %}<i class="fas fa-users text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                <i class="fas fa-search text-sm"></i>
+            </span>
+            <input type="text" placeholder="Cari siswa..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-2 focus-ring-primary transition-all text-sm font-medium">
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'export_students_excel' %}" class="inline-flex items-center px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+                <i class="fas fa-file-excel mr-2 text-xs"></i> Export
+            </a>
+            <button type="button" onclick="openStudentImportModal()" class="inline-flex items-center px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">
+                <i class="fas fa-upload mr-2 text-xs"></i> Import
+            </button>
+            <button onclick="openStudentModal()" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-primary/20 transition-all">
+                <i class="fas fa-plus mr-2 text-xs"></i> Tambah Siswa
+            </button>
+        </div>
+    </div>
+
+    <!-- Tambah/Edit Siswa Modal -->
+    <div id="studentModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeStudentModal()"></div>
+            
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 id="modalTitle" class="text-2xl font-black text-slate-900 uppercase tracking-tight">TAMBAH SISWA BARU</h3>
+                    <button onclick="closeStudentModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="studentForm" method="POST" enctype="multipart/form-data" class="px-10 pb-10 space-y-8 max-h-[75vh] overflow-y-auto">
+                    {% csrf_token %}
+                    <input type="hidden" name="student_id" id="student_id">
+                    
+                    <!-- Foto Profil Section -->
+                    <div class="flex flex-col items-center space-y-4 pb-4">
+                        <div class="relative group">
+                            <div id="photoPreview" class="w-32 h-32 rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center text-slate-300">
+                                <i class="fas fa-user text-4xl"></i>
+                            </div>
+                            <label class="absolute bottom-0 right-0 w-10 h-10 bg-[#1e295b] text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-transform z-10">
+                                <i class="fas fa-camera text-xs"></i>
+                                <input type="file" name="photo" id="field_photo" class="hidden" accept="image/*" onchange="previewImage(this)">
+                            </label>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto Profil Siswa</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Nama Lengkap -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Lengkap Siswa *</label>
+                            <input type="text" name="full_name" id="field_full_name" required placeholder="Nama Sesuai Ijazah" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- NISN -->
+                        <div class="space-y-2">
+                            <label id="nisnLabel" class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">NISN *</label>
+                            <input type="text" name="nisn" id="field_nisn" required placeholder="10 Digit NISN" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Kelas -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Pilih Kelas *</label>
+                            <select name="class_id" id="field_class" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="">Pilih Kelas</option>
+                                {% for class in classes %}
+                                <option value="{{ class.id }}">{{ class.name }} ({{ class.get_program_display }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Jenis Kelamin -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Jenis Kelamin</label>
+                            <select name="gender" id="field_gender" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                        <!-- Tempat Lahir -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tempat Lahir</label>
+                            <input type="text" name="birth_place" id="field_birth_place" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Tanggal Lahir -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tanggal Lahir</label>
+                            <input type="date" name="birth_date" id="field_birth_date" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all">
+                        </div>
+                        <!-- Username -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Username Login *</label>
+                            <input type="text" name="username" id="field_username" required placeholder="Username untuk siswa" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Email -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Email</label>
+                            <input type="email" name="email" id="field_email" placeholder="siswa@email.com" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- NIS -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">NIS</label>
+                            <input type="text" name="nis" id="field_nis" placeholder="Nomor Induk Siswa" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Password -->
+                        <div class="space-y-2">
+                            <label id="passwordLabel" class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Password Login *</label>
+                            <input type="password" name="password" id="field_password" placeholder="Min. 8 karakter" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                            <p id="passwordHint" class="hidden text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">* Kosongkan jika tidak ingin mengubah</p>
+                        </div>
+                        <!-- Nama Orang Tua -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Orang Tua / Wali</label>
+                            <input type="text" name="parent_name" id="field_parent_name" placeholder="Nama Ayah/Ibu/Wali" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Alamat -->
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Alamat Lengkap</label>
+                            <textarea name="address" id="field_address" rows="3" placeholder="Alamat tinggal saat ini" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6">
+                        <button type="submit" id="submitBtn" class="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/30 transition-all">
+                            SIMPAN
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function openStudentModal() {
+            document.getElementById('modalTitle').innerText = 'TAMBAH SISWA BARU';
+            document.getElementById('submitBtn').innerText = 'SIMPAN';
+            document.getElementById('student_id').value = '';
+            document.getElementById('studentForm').reset();
+            
+            // Reset photo preview
+            document.getElementById('photoPreview').innerHTML = '<i class="fas fa-user text-4xl"></i>';
+            
+            // Password behavior for add
+            document.getElementById('field_password').required = true;
+            document.getElementById('passwordLabel').innerText = 'PASSWORD *';
+            document.getElementById('passwordHint').classList.add('hidden');
+            document.getElementById('field_nisn').required = true;
+            document.getElementById('nisnLabel').innerText = 'NISN *';
+            
+            document.getElementById('studentModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function editStudent(data) {
+            document.getElementById('modalTitle').innerText = 'EDIT SISWA';
+            document.getElementById('submitBtn').innerText = 'SIMPAN';
+            document.getElementById('student_id').value = data.id;
+            
+            // Fill fields
+            document.getElementById('field_full_name').value = data.name;
+            document.getElementById('field_email').value = data.email;
+            document.getElementById('field_username').value = data.username;
+            document.getElementById('field_nis').value = data.nis;
+            document.getElementById('field_nisn').value = data.nisn;
+            document.getElementById('field_class').value = data.class_id;
+            document.getElementById('field_gender').value = data.gender;
+            document.getElementById('field_birth_place').value = data.birth_place;
+            document.getElementById('field_birth_date').value = data.birth_date;
+            document.getElementById('field_parent_name').value = data.parent_name;
+            document.getElementById('field_address').value = data.address;
+            
+            // Photo preview for edit
+            if (data.photo_url) {
+                document.getElementById('photoPreview').innerHTML = `<img src="${data.photo_url}" class="w-full h-full object-cover">`;
+            } else {
+                document.getElementById('photoPreview').innerHTML = '<i class="fas fa-user text-4xl"></i>';
+            }
+            
+            // Password behavior for edit
+            document.getElementById('field_password').required = false;
+            document.getElementById('passwordLabel').innerText = 'PASSWORD';
+            document.getElementById('passwordHint').classList.remove('hidden');
+            document.getElementById('field_nisn').required = false;
+            document.getElementById('nisnLabel').innerText = 'NISN';
+            
+            document.getElementById('studentModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openStudentImportModal() {
+            document.getElementById('studentImportModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeStudentImportModal() {
+            document.getElementById('studentImportModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+
+    <!-- Import Siswa Modal -->
+    <div id="studentImportModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeStudentImportModal()"></div>
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">IMPORT SISWA (EXCEL)</h3>
+                    <button onclick="closeStudentImportModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form method="POST" action="{% url 'import_students_excel' %}" enctype="multipart/form-data" class="px-10 pb-10 space-y-6">
+                    {% csrf_token %}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">File Excel (.xlsx)</label>
+                        <input type="file" name="excel_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gunakan sheet: Students</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <a href="{% url 'export_students_excel' %}" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Download Contoh</a>
+                        <button type="submit" class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/20 transition-all">
+                            <i class="fas fa-upload mr-3"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                        <th class="px-8 py-5">NISN</th>
+                        <th class="px-8 py-5">NIS</th>
+                        <th class="px-8 py-5">Nama</th>
+                        <th class="px-8 py-5">Kelas</th>
+                        <th class="px-8 py-5">Program</th>
+                        <th class="px-8 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for student in students %}
+                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                        <td class="px-8 py-5 text-sm font-bold text-slate-400 group-hover:text-slate-900 transition-colors">{{ student.nisn }}</td>
+                        <td class="px-8 py-5 text-sm font-bold text-slate-400 group-hover:text-slate-900 transition-colors">{{ student.nis|default:"-" }}</td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs">
+                                    {{ student.user.first_name.0|upper }}
+                                </div>
+                                <span class="text-sm font-black text-slate-900">{{ student.user.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-sm font-bold text-slate-500">
+                            {{ student.class_level.name|default:"Belum Diatur" }}
+                        </td>
+                        <td class="px-8 py-5">
+                            {% if student.class_level %}
+                            <span class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                {{ student.class_level.get_program_display }}
+                            </span>
+                            {% else %}
+                            <span class="text-[10px] text-slate-300 italic">Data kosong</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <button onclick="editStudent({
+                                id: '{{ student.id }}',
+                                name: '{{ student.user.get_full_name|escapejs }}',
+                                email: '{{ student.user.email|default:""|escapejs }}',
+                                username: '{{ student.user.username|escapejs }}',
+                                nis: '{{ student.nis|default:""|escapejs }}',
+                                nisn: '{{ student.nisn|default:""|escapejs }}',
+                                class_id: '{{ student.class_level.id|default:"" }}',
+                                gender: '{{ student.gender|default:"" }}',
+                                birth_place: '{{ student.birth_place|default:""|escapejs }}',
+                                birth_date: '{{ student.birth_date|date:"Y-m-d" }}',
+                                parent_name: '{{ student.parent_name|default:""|escapejs }}',
+                                address: '{{ student.address|default:""|escapejs }}',
+                                photo_url: '{% if student.user.photo %}{{ student.user.photo.url }}{% endif %}'
+                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-user-slash text-4xl text-slate-100 mb-4"></i>
+                                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum ada data siswa</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

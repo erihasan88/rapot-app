@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard Admin{% endblock %}
+{% block page_icon %}<i class="fas fa-th-large text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Top Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+            <div>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Total Siswa</p>
+                <p class="text-4xl font-black text-slate-900">{{ student_count }}</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-2">Paket B & C</p>
+            </div>
+            <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <i class="fas fa-users text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+            <div>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Total Guru</p>
+                <p class="text-4xl font-black text-slate-900">{{ teacher_count }}</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-2">Aktif mengajar</p>
+            </div>
+            <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <i class="fas fa-user-circle text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+            <div>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Kelas</p>
+                <p class="text-4xl font-black text-slate-900">{{ class_count }}</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-2">Setara SMP & SMA</p>
+            </div>
+            <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <i class="fas fa-book-open text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+            <div>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Mata Pelajaran</p>
+                <p class="text-4xl font-black text-slate-900">{{ subject_count }}</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-2">Kurikulum Merdeka</p>
+            </div>
+            <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <i class="fas fa-file-alt text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Active Academic Year -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[300px]">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center">
+                <i class="fas fa-calendar-alt mr-3 text-slate-400"></i>
+                Tahun Ajaran Aktif
+            </h3>
+            {% if active_year %}
+            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-2xl font-black text-slate-900 mb-1">{{ active_year.year }}</p>
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Semester {{ active_year.get_semester_display }}</p>
+            </div>
+            {% else %}
+            <div class="h-40 flex flex-col items-center justify-center text-slate-400">
+                <i class="fas fa-calendar-times text-4xl mb-4 opacity-20"></i>
+                <p class="text-sm font-bold uppercase tracking-widest">Belum ada tahun ajaran aktif</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Program Summary -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[300px]">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center">
+                <i class="fas fa-graduation-cap mr-3 text-slate-400"></i>
+                Ringkasan Program
+            </h3>
+            <div class="space-y-4">
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300">
+                    <span class="text-sm font-bold text-slate-700">Paket B (Setara SMP)</span>
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900">{{ paket_b_count }} siswa</span>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300">
+                    <span class="text-sm font-bold text-slate-700">Paket C (Setara SMA)</span>
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900">{{ paket_c_count }} siswa</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

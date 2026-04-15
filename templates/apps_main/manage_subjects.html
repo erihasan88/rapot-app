@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Mata Pelajaran{% endblock %}
+{% block page_icon %}<i class="fas fa-file-alt text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                <i class="fas fa-search text-sm"></i>
+            </span>
+            <input type="text" placeholder="Cari mapel..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-2 focus-ring-primary focus:border-[primary] transition-all text-sm font-medium">
+        </div>
+        <button onclick="openSubjectModal()" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-slate-200 transition-all">
+            <i class="fas fa-plus mr-2 text-xs"></i> Tambah Mapel
+        </button>
+    </div>
+
+    <!-- Tambah/Edit Mapel Modal -->
+    <div id="subjectModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeSubjectModal()"></div>
+            
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 id="modalTitle" class="text-2xl font-black text-slate-900 uppercase tracking-tight">TAMBAH MAPEL BARU</h3>
+                    <button onclick="closeSubjectModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="subjectForm" method="POST" class="px-10 pb-10 space-y-8 max-h-[75vh] overflow-y-auto">
+                    {% csrf_token %}
+                    <input type="hidden" name="subject_id" id="subject_id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Nama Mapel -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Mata Pelajaran *</label>
+                            <input type="text" name="name" id="field_name" required placeholder="Contoh: Matematika" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Program -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Program *</label>
+                            <select name="program" id="field_program" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="PAKET_B">Paket B (SMP)</option>
+                                <option value="PAKET_C">Paket C (SMA)</option>
+                                <option value="BOTH">Keduanya</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6">
+                        <button type="submit" id="submitBtn" class="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-[primary]/30 transition-all">
+                            SIMPAN
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                        <th class="px-8 py-5">Nama Mata Pelajaran</th>
+                        <th class="px-8 py-5">Kurikulum</th>
+                        <th class="px-8 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for subject in subjects %}
+                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ subject.name }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                Kurikulum Merdeka
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <button onclick="editSubject({
+                                id: '{{ subject.id }}',
+                                name: '{{ subject.name }}'
+                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-file-alt text-4xl text-slate-100 mb-4"></i>
+                                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum ada data mapel</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openSubjectModal() {
+        document.getElementById('modalTitle').innerText = 'TAMBAH MAPEL BARU';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('subject_id').value = '';
+        document.getElementById('subjectForm').reset();
+        document.getElementById('subjectModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function editSubject(data) {
+        document.getElementById('modalTitle').innerText = 'EDIT MAPEL';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('subject_id').value = data.id;
+        document.getElementById('field_name').value = data.name;
+        document.getElementById('subjectModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSubjectModal() {
+        document.getElementById('subjectModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+</script>
+{% endblock %}
+
+

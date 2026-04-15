@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Lengkapi Data Rapor{% endblock %}
+{% block page_icon %}<i class="fas fa-file-invoice text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Student Header Card -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="flex items-center space-x-6">
+            <div class="w-20 h-20 rounded-2xl bg-slate-50 flex items-center justify-center text-primary text-3xl font-black shadow-inner">
+                {% if student.user.photo %}
+                    <img src="{{ student.user.photo.url }}" class="w-full h-full rounded-2xl object-cover">
+                {% else %}
+                    {{ student.user.first_name.0|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">{{ student.user.get_full_name }}</h3>
+                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">{{ student.class_level.name }} • NISN: {{ student.nisn }}</p>
+            </div>
+        </div>
+        <a href="{% url 'input_grades' %}" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">
+            <i class="fas fa-arrow-left mr-2"></i> KEMBALI
+        </a>
+    </div>
+
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Attendance Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-calendar-check text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Data Kehadiran</h3>
+            </div>
+            <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Sakit (Hari)</label>
+                    <input type="number" name="sakit" value="{{ attendance.sakit }}" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 text-center">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Izin (Hari)</label>
+                    <input type="number" name="izin" value="{{ attendance.izin }}" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 text-center">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tanpa Keterangan (Hari)</label>
+                    <input type="number" name="alpha" value="{{ attendance.alpha }}" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 text-center">
+                </div>
+            </div>
+        </div>
+
+        <!-- Attitude Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-heart text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Sikap & Karakter</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Predikat Sikap</label>
+                    <div class="relative">
+                        <select name="attitude_score" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 appearance-none cursor-pointer">
+                            <option value="Sangat Baik" {% if attitude.score == 'Sangat Baik' %}selected{% endif %}>Sangat Baik</option>
+                            <option value="Baik" {% if attitude.score == 'Baik' %}selected{% endif %}>Baik</option>
+                            <option value="Cukup" {% if attitude.score == 'Cukup' %}selected{% endif %}>Cukup</option>
+                            <option value="Perlu Bimbingan" {% if attitude.score == 'Perlu Bimbingan' %}selected{% endif %}>Perlu Bimbingan</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-slate-400">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Deskripsi Karakter</label>
+                    <textarea name="attitude_desc" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-medium text-slate-600" rows="3" placeholder="Tuliskan deskripsi perkembangan karakter siswa...">{{ attitude.description }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- P5 Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-project-diagram text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Projek P5 (Profil Pelajar Pancasila)</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Judul Projek</label>
+                        <input type="text" name="p5_title" value="{{ p5.title|default:'' }}" placeholder="Contoh: Kewirausahaan Berkelanjutan" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Capaian Projek</label>
+                        <div class="relative">
+                            <select name="p5_score" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-bold text-slate-900 appearance-none cursor-pointer">
+                                <option value="Sangat Berkembang" {% if p5.score == 'Sangat Berkembang' %}selected{% endif %}>Sangat Berkembang</option>
+                                <option value="Berkembang Sesuai Harapan" {% if p5.score == 'Berkembang Sesuai Harapan' %}selected{% endif %}>Berkembang Sesuai Harapan</option>
+                                <option value="Mulai Berkembang" {% if p5.score == 'Mulai Berkembang' %}selected{% endif %}>Mulai Berkembang</option>
+                                <option value="Belum Berkembang" {% if p5.score == 'Belum Berkembang' %}selected{% endif %}>Belum Berkembang</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Deskripsi Capaian Projek</label>
+                    <textarea name="p5_desc" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-medium text-slate-600" rows="3" placeholder="Tuliskan detail pencapaian siswa dalam projek ini...">{{ p5.description }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-comment-dots text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Catatan Wali Kelas</h3>
+            </div>
+            <div class="p-8">
+                <textarea name="notes" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary text-sm font-medium text-slate-600" rows="3" placeholder="Tuliskan catatan motivasi atau evaluasi untuk siswa...">{{ note.notes }}</textarea>
+            </div>
+        </div>
+
+        <div class="flex justify-start">
+            <button type="submit" class="inline-flex items-center px-10 py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/30 transition-all">
+                <i class="fas fa-save mr-3"></i> SIMPAN SEMUA DATA SISWA
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Pengaturan Sekolah{% endblock %}
+{% block page_icon %}<i class="fas fa-cog text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Profile Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-school text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Profil Sekolah</h3>
+            </div>
+            
+            <div class="p-8 space-y-8">
+                <!-- Agency Name -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Lembaga</label>
+                    <input type="text" name="name" value="{{ school.name }}" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                </div>
+
+                <!-- Address -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Alamat</label>
+                    <textarea name="address" rows="3" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">{{ school.address }}</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Phone -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Telepon</label>
+                        <input type="text" name="phone" value="{{ school.phone|default:'' }}" placeholder="Contoh: 021-xxxxxxx" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                    </div>
+                    <!-- Email -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Email</label>
+                        <input type="email" name="email" value="{{ school.email|default:'' }}" placeholder="sekolah@email.com" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Principal -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Kepala Sekolah</label>
+                        <input type="text" name="principal_name" value="{{ school.principal_name }}" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                    </div>
+                    <!-- NIP -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">NIP Kepala Sekolah</label>
+                        <input type="text" name="nip" value="{{ school.nip|default:'' }}" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-palette text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Tampilan & Identitas</h3>
+            </div>
+            
+            <div class="p-8 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <!-- Logo Upload -->
+                    <div class="space-y-4">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Logo Lembaga</label>
+                        <div class="flex items-center space-x-6">
+                            <div class="w-24 h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+                                {% if school.logo %}
+                                    <img src="{{ school.logo.url }}" class="w-full h-full object-contain">
+                                {% else %}
+                                    <i class="fas fa-image text-slate-300 text-2xl"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="logo" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary file:text-white hover:opacity-90 transition-all">
+                                <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">Format: PNG, JPG (Max 2MB)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme Color -->
+                    <div class="space-y-4">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Warna Tema Utama</label>
+                        <div class="grid grid-cols-4 gap-3">
+                            {% for color in color_options %}
+                            <label class="relative cursor-pointer group">
+                                <input type="radio" name="theme_color" value="{{ color }}" class="peer sr-only" {% if school.theme_color == color %}checked{% endif %}>
+                                <div class="w-full aspect-square rounded-xl border-2 border-transparent peer-checked:border-slate-900 transition-all shadow-sm" style="background-color: {{ color }};"></div>
+                                <div class="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-opacity">
+                                    <i class="fas fa-check text-xs"></i>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Warna akan diterapkan pada Sidebar dan Tombol Utama</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tanda Tangan -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-stamp text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Tanda Tangan</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="grid grid-cols-1 gap-12">
+                    <div class="space-y-4">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tanda Tangan (Gambar)</label>
+                        <div class="flex items-center space-x-6">
+                            <div class="w-32 h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+                                {% if school.signature %}
+                                    <img src="{{ school.signature.url }}" class="w-full h-full object-contain">
+                                {% else %}
+                                    <i class="fas fa-signature text-slate-300 text-2xl"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="signature" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary file:text-white hover:opacity-90 transition-all">
+                                <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">Format: PNG (disarankan transparan)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Akun Admin Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center space-x-3">
+                <i class="fas fa-user-shield text-slate-400"></i>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Akun Admin</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Email Admin (Login)</label>
+                    <input type="email" name="admin_email" value="{{ user.email|default:school.email }}" placeholder="admin@sekolah.id" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Username login akan mengikuti email ini</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-50 space-y-6">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-key text-slate-400"></i>
+                        <h4 class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Ganti Password</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Password Saat Ini</label>
+                            <input type="password" name="current_password" placeholder="Password lama" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Password Baru</label>
+                            <input type="password" name="new_password" placeholder="Password baru" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Ulangi Password Baru</label>
+                            <input type="password" name="confirm_password" placeholder="Ulangi password" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Kosongkan jika tidak ingin mengganti password</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-start">
+            <button type="submit" class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/20 transition-all">
+                <i class="fas fa-save mr-3"></i> Simpan Pengaturan
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

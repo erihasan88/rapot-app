@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 pb-12">
+    <!-- Action Bar -->
+    <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800">Rapor Digital Kurikulum Merdeka</h3>
+        <div class="flex space-x-2">
+            <button onclick="window.print()" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition flex items-center">
+                <i class="fas fa-print mr-2"></i> Cetak
+            </button>
+            <a href="?format=pdf" class="px-4 py-2 text-sm font-semibold text-white bg-slate-900 border border-slate-900 rounded-lg hover:bg-slate-800 transition flex items-center">
+                <i class="fas fa-download mr-2"></i> Download PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Card -->
+    <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 print:shadow-none print:border-none print:p-0">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-8 border-b border-gray-100 pb-8">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                    {% if school.logo %}
+                        <img src="{{ school.logo.url }}" class="w-full h-full object-contain p-2">
+                    {% else %}
+                        PKBM
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ school.name|upper }}</h1>
+                    <p class="text-sm text-gray-500">{{ school.address }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-gray-900">TAHUN AJARAN {{ year.year }}</p>
+                <p class="text-xs text-gray-500">Semester: {{ year.get_semester_display }}</p>
+            </div>
+        </div>
+
+        <!-- Student Info -->
+        <div class="grid grid-cols-2 gap-8 mb-8 text-sm">
+            <div class="space-y-2">
+                <div class="flex"><span class="w-32 font-medium text-gray-500">Nama Siswa</span><span class="font-bold text-gray-900">: {{ user.get_full_name|upper }}</span></div>
+                <div class="flex"><span class="w-32 font-medium text-gray-500">NISN</span><span class="text-gray-900">: {{ student.nisn }}</span></div>
+                <div class="flex"><span class="w-32 font-medium text-gray-500">Program</span><span class="text-gray-900">: {{ student.class_level.get_program_display }}</span></div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex"><span class="w-32 font-medium text-gray-500">Fase</span><span class="text-gray-900">: {{ student.class_level.get_phase_display }}</span></div>
+                <div class="flex"><span class="w-32 font-medium text-gray-500">Kelas</span><span class="text-gray-900">: {{ student.class_level.name }}</span></div>
+            </div>
+        </div>
+
+        <!-- Grades Table -->
+        <div class="mb-8">
+            <h4 class="font-bold text-gray-900 mb-4 border-l-4 border-slate-900 pl-4">A. NILAI AKADEMIK</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-200 text-sm">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="border border-gray-200 px-4 py-2 w-12 text-center">No</th>
+                            <th class="border border-gray-200 px-4 py-2 text-left">Mata Pelajaran</th>
+                            <th class="border border-gray-200 px-4 py-2 w-20 text-center">Nilai</th>
+                            <th class="border border-gray-200 px-4 py-2 text-left">Capaian Kompetensi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td class="border border-gray-200 px-4 py-4 text-center">{{ forloop.counter }}</td>
+                            <td class="border border-gray-200 px-4 py-4 font-medium">{{ grade.subject.name }}</td>
+                            <td class="border border-gray-200 px-4 py-4 text-center font-bold">{{ grade.numeric_grade|floatformat:0 }}</td>
+                            <td class="border border-gray-200 px-4 py-4 text-gray-600 italic text-xs leading-relaxed">{{ grade.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Attitude & P5 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+                <h4 class="font-bold text-gray-900 mb-4 border-l-4 border-slate-900 pl-4">B. SIKAP & KARAKTER</h4>
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <p class="text-sm font-bold text-slate-900 mb-2">Predikat: {{ attitude.score|default:"-" }}</p>
+                    <p class="text-xs text-slate-600 leading-relaxed italic">{{ attitude.description|default:"-" }}</p>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-gray-900 mb-4 border-l-4 border-slate-900 pl-4">C. PROJEK P5</h4>
+                <div class="space-y-4">
+                    {% for project in p5 %}
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                        <p class="text-sm font-bold text-slate-900 mb-1">{{ project.title }}</p>
+                        <p class="text-xs text-blue-600 font-bold mb-2">{{ project.score }}</p>
+                        <p class="text-xs text-slate-600 leading-relaxed italic">{{ project.description }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-400">Belum ada data projek.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance & Note -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div>
+                <h4 class="font-bold text-gray-900 mb-4 border-l-4 border-slate-900 pl-4">D. KEHADIRAN</h4>
+                <table class="w-full border-collapse border border-gray-200 text-sm">
+                    <tr><td class="border border-gray-200 px-4 py-2 font-medium">Sakit</td><td class="border border-gray-200 px-4 py-2 text-center">{{ attendance.sakit|default:"0" }} hari</td></tr>
+                    <tr><td class="border border-gray-200 px-4 py-2 font-medium">Izin</td><td class="border border-gray-200 px-4 py-2 text-center">{{ attendance.izin|default:"0" }} hari</td></tr>
+                    <tr><td class="border border-gray-200 px-4 py-2 font-medium">Tanpa Keterangan</td><td class="border border-gray-200 px-4 py-2 text-center">{{ attendance.alpha|default:"0" }} hari</td></tr>
+                </table>
+            </div>
+            <div>
+                <h4 class="font-bold text-gray-900 mb-4 border-l-4 border-slate-900 pl-4">E. CATATAN GURU</h4>
+                <div class="p-4 border-2 border-dashed border-gray-200 rounded-xl text-sm italic text-gray-600">
+                    "{{ note.notes|default:"-" }}"
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="flex justify-between items-end mt-16 text-sm">
+            <div class="text-center">
+                <p class="mb-20 text-gray-900">Orang Tua/Wali</p>
+                <div class="w-40 border-b border-gray-900 mx-auto"></div>
+            </div>
+            <div class="text-center">
+                <p class="text-gray-900">Agrabinta, {{ today|date:"d F Y" }}</p>
+                <p class="mb-20 text-gray-900">Kepala PKBM Darul Ulum</p>
+                <div class="flex flex-col items-center -mt-16 mb-6 space-y-2">
+                    {% if school.signature %}
+                        <img src="{{ school.signature.url }}" class="h-16 object-contain">
+                    {% endif %}
+                </div>
+                <p class="font-bold text-gray-900">{{ school.principal_name }}</p>
+                <p class="text-xs text-gray-500">NIP. {{ school.nip|default:"-" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

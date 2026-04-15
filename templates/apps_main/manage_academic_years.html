@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Tahun Ajaran{% endblock %}
+{% block page_icon %}<i class="fas fa-calendar-alt text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                <i class="fas fa-search text-sm"></i>
+            </span>
+            <input type="text" placeholder="Cari tahun ajaran..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-2 focus-ring-primary focus:border-[primary] transition-all text-sm font-medium">
+        </div>
+        <button onclick="openYearModal()" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-slate-200 transition-all">
+            <i class="fas fa-plus mr-2 text-xs"></i> Tambah Tahun Ajaran
+        </button>
+    </div>
+
+    <!-- Tambah/Edit Modal -->
+    <div id="yearModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeYearModal()"></div>
+            
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 id="modalTitle" class="text-2xl font-black text-slate-900 uppercase tracking-tight">TAMBAH TAHUN AJARAN</h3>
+                    <button onclick="closeYearModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="yearForm" method="POST" class="px-10 pb-10 space-y-8 max-h-[75vh] overflow-y-auto">
+                    {% csrf_token %}
+                    <input type="hidden" name="year_id" id="year_id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Tahun -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Tahun Ajaran *</label>
+                            <input type="text" name="year" id="field_year" required placeholder="Contoh: 2023/2024" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Semester -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Semester *</label>
+                            <select name="semester" id="field_semester" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="1">Ganjil</option>
+                                <option value="2">Genap</option>
+                            </select>
+                        </div>
+                        <!-- Status Aktif -->
+                        <div class="flex items-center space-x-3 pt-4">
+                            <input type="checkbox" name="is_active" id="field_is_active" class="w-5 h-5 rounded border-slate-300 text-primary focus-ring-primary">
+                            <label class="text-sm font-bold text-slate-700">Set sebagai Aktif</label>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6">
+                        <button type="submit" id="submitBtn" class="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-[primary]/30 transition-all">
+                            SIMPAN
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                        <th class="px-8 py-5">Tahun Ajaran</th>
+                        <th class="px-8 py-5">Semester</th>
+                        <th class="px-8 py-5">Status</th>
+                        <th class="px-8 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for year in years %}
+                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ year.year }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-bold text-slate-500">{{ year.get_semester_display }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            {% if year.is_active %}
+                            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                Aktif
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                Non-Aktif
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <button onclick="editYear({
+                                id: '{{ year.id }}',
+                                year: '{{ year.year }}',
+                                semester: '{{ year.semester }}',
+                                is_active: {{ year.is_active|lower }}
+                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-calendar-times text-4xl text-slate-100 mb-4"></i>
+                                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum ada data tahun ajaran</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openYearModal() {
+        document.getElementById('modalTitle').innerText = 'TAMBAH TAHUN AJARAN';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('year_id').value = '';
+        document.getElementById('yearForm').reset();
+        document.getElementById('yearModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function editYear(data) {
+        document.getElementById('modalTitle').innerText = 'EDIT TAHUN AJARAN';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('year_id').value = data.id;
+        document.getElementById('field_year').value = data.year;
+        document.getElementById('field_semester').value = data.semester;
+        document.getElementById('field_is_active').checked = data.is_active;
+        document.getElementById('yearModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeYearModal() {
+        document.getElementById('yearModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Data Guru{% endblock %}
+{% block page_icon %}<i class="fas fa-user-circle text-xs"></i>{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                <i class="fas fa-search text-sm"></i>
+            </span>
+            <input type="text" placeholder="Cari guru..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-2 focus-ring-primary focus:border-[primary] transition-all text-sm font-medium">
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'export_teachers_excel' %}" class="inline-flex items-center px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+                <i class="fas fa-file-excel mr-2 text-xs"></i> Export
+            </a>
+            <button type="button" onclick="openTeacherImportModal()" class="inline-flex items-center px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">
+                <i class="fas fa-upload mr-2 text-xs"></i> Import
+            </button>
+            <button onclick="openTeacherModal()" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-primary/20 transition-all">
+                <i class="fas fa-plus mr-2 text-xs"></i> Tambah Guru
+            </button>
+        </div>
+    </div>
+
+    <!-- Tambah/Edit Guru Modal -->
+    <div id="teacherModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeTeacherModal()"></div>
+            
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 id="modalTitle" class="text-2xl font-black text-slate-900 uppercase tracking-tight">TAMBAH GURU BARU</h3>
+                    <button onclick="closeTeacherModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="teacherForm" method="POST" class="px-10 pb-10 space-y-8 max-h-[75vh] overflow-y-auto">
+                    {% csrf_token %}
+                    <input type="hidden" name="teacher_id" id="teacher_id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Full Name -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Lengkap *</label>
+                            <input type="text" name="full_name" id="field_full_name" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Email -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Email *</label>
+                            <input type="email" name="email" id="field_email" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Username -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Username *</label>
+                            <input type="text" name="username" id="field_username" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- Password -->
+                        <div class="space-y-2">
+                            <label id="passwordLabel" class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Password *</label>
+                            <input type="password" name="password" id="field_password" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                            <p id="passwordHint" class="hidden text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">* Kosongkan jika tidak ingin mengubah</p>
+                        </div>
+                        <!-- NIP -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">NIP</label>
+                            <input type="text" name="nip" id="field_nip" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Subject Assignments -->
+                    <div class="pt-4 border-t border-slate-50 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Penugasan Mata Pelajaran</h4>
+                            <button type="button" onclick="addAssignmentRow()" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
+                                <i class="fas fa-plus mr-1"></i> Tambah Mapel
+                            </button>
+                        </div>
+                        
+                        <div id="assignmentContainer" class="space-y-4">
+                            <!-- Rows will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Wali Kelas -->
+                    <div class="pt-4 border-t border-slate-50 space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Wali Kelas</label>
+                        <div class="relative">
+                            <select name="homeroom_class_id" id="field_homeroom_class" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="">Tidak ditetapkan</option>
+                                {% for c in classes %}
+                                <option value="{{ c.id }}">{{ c.name }} ({{ c.get_program_display }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Jika dipilih, kelas tersebut menjadi wali kelas guru ini</p>
+                    </div>
+                    
+                    <div class="pt-6">
+                        <button type="submit" id="submitBtn" class="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-[primary]/30 transition-all">
+                            SIMPAN
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Guru Modal -->
+    <div id="teacherImportModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeTeacherImportModal()"></div>
+            <div class="relative bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden transform transition-all">
+                <div class="px-10 py-8 flex items-center justify-between bg-white">
+                    <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">IMPORT GURU (EXCEL)</h3>
+                    <button onclick="closeTeacherImportModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form method="POST" action="{% url 'import_teachers_excel' %}" enctype="multipart/form-data" class="px-10 pb-10 space-y-6">
+                    {% csrf_token %}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">File Excel (.xlsx)</label>
+                        <input type="file" name="excel_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gunakan sheet: Teachers dan TeacherAssignments</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <a href="{% url 'export_teachers_excel' %}" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Download Contoh</a>
+                        <button type="submit" class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/20 transition-all">
+                            <i class="fas fa-upload mr-3"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                        <th class="px-8 py-5">NIP</th>
+                        <th class="px-8 py-5">Nama</th>
+                        <th class="px-8 py-5">Spesialisasi</th>
+                        <th class="px-8 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for teacher in teachers %}
+                    <tr class="hover:bg-slate-50/30 transition-colors group">
+                        <td class="px-8 py-5 text-sm font-bold text-slate-400 group-hover:text-slate-900 transition-colors">{{ teacher.nip|default:"-" }}</td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs">
+                                    {{ teacher.user.first_name.0|upper }}
+                                </div>
+                                <span class="text-sm font-black text-slate-900">{{ teacher.user.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex flex-wrap gap-1">
+                                {% for subject in teacher.subjects.all %}
+                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                    {{ subject.name }}
+                                </span>
+                                {% empty %}
+                                <span class="text-xs text-slate-400 font-bold italic">Belum ada mapel</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <button onclick="editTeacher({
+                                id: '{{ teacher.id }}',
+                                name: '{{ teacher.user.get_full_name|escapejs }}',
+                                email: '{{ teacher.user.email|default:""|escapejs }}',
+                                username: '{{ teacher.user.username|escapejs }}',
+                                nip: '{{ teacher.nip|default:""|escapejs }}',
+                                homeroom_class_id: '{{ teacher.homeroom_classes.first.id }}',
+                                assignments: [
+                                    {% for ts in teacher.teachersubject_set.all %}
+                                    { subject_id: '{{ ts.subject.id }}', class_id: '{{ ts.class_level.id }}' }{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                ]
+                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-user-circle text-4xl text-slate-100 mb-4"></i>
+                                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum ada data guru</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pre-generate options for JavaScript to avoid issues with template rendering inside JS
+    const subjectOptions = `
+        <option value="">Pilih Mapel</option>
+        {% for s in subjects %}
+        <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+    `;
+    
+    const classOptions = `
+        <option value="">Pilih Kelas</option>
+        {% for c in classes %}
+        <option value="{{ c.id }}">{{ c.name }} ({{ c.get_program_display }})</option>
+        {% endfor %}
+    `;
+
+    function addAssignmentRow(data = null) {
+        const container = document.getElementById('assignmentContainer');
+        const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 9);
+        
+        const row = document.createElement('div');
+        row.id = rowId;
+        row.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl relative group/row';
+        
+        row.innerHTML = `
+            <div class="space-y-1">
+                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Mata Pelajaran</label>
+                <select name="subjects[]" required class="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl focus:ring-2 focus-ring-primary text-xs font-bold text-slate-900 appearance-none cursor-pointer">
+                    ${subjectOptions}
+                </select>
+            </div>
+            <div class="space-y-1 pr-8">
+                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Kelas</label>
+                <select name="classes[]" required class="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl focus:ring-2 focus-ring-primary text-xs font-bold text-slate-900 appearance-none cursor-pointer">
+                    ${classOptions}
+                </select>
+            </div>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors">
+                <i class="fas fa-minus-circle"></i>
+            </button>
+        `;
+        
+        container.appendChild(row);
+
+        // If data is provided, set the selected values
+        if (data) {
+            const selects = row.querySelectorAll('select');
+            if (data.subject_id) selects[0].value = data.subject_id;
+            if (data.class_id) selects[1].value = data.class_id;
+        }
+    }
+
+    function openTeacherModal() {
+        document.getElementById('modalTitle').innerText = 'TAMBAH GURU BARU';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('teacher_id').value = '';
+        document.getElementById('teacherForm').reset();
+        document.getElementById('assignmentContainer').innerHTML = '';
+        document.getElementById('field_homeroom_class').value = '';
+        
+        document.getElementById('field_password').required = true;
+        document.getElementById('passwordLabel').innerText = 'PASSWORD *';
+        document.getElementById('passwordHint').classList.add('hidden');
+        
+        document.getElementById('teacherModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function editTeacher(data) {
+        document.getElementById('modalTitle').innerText = 'EDIT GURU';
+        document.getElementById('submitBtn').innerText = 'SIMPAN';
+        document.getElementById('teacher_id').value = data.id;
+        
+        document.getElementById('field_full_name').value = data.name;
+        document.getElementById('field_email').value = data.email;
+        document.getElementById('field_username').value = data.username;
+        document.getElementById('field_nip').value = data.nip;
+        document.getElementById('field_homeroom_class').value = data.homeroom_class_id || '';
+        
+        document.getElementById('field_password').required = false;
+        document.getElementById('passwordLabel').innerText = 'PASSWORD';
+        document.getElementById('passwordHint').classList.remove('hidden');
+
+        // Fill assignments
+        document.getElementById('assignmentContainer').innerHTML = '';
+        if (data.assignments && data.assignments.length > 0) {
+            data.assignments.forEach(assign => addAssignmentRow(assign));
+        }
+        
+        document.getElementById('teacherModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTeacherModal() {
+        document.getElementById('teacherModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function openTeacherImportModal() {
+        document.getElementById('teacherImportModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTeacherImportModal() {
+        document.getElementById('teacherImportModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+</script>
+{% endblock %}
