@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: rapot-app
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
+    startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rapot-db
+          property: connectionString
+      - key: SERVE_MEDIA
+        value: "True"
+      - key: MEDIA_ROOT
+        value: "/var/data/media"
+    disk:
+      name: media
+      mountPath: /var/data
+      sizeGB: 1
+
+databases:
+  - name: rapot-db
+    plan: free
