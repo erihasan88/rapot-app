@@ -117,11 +117,72 @@
                             <input type="password" name="password" id="field_password" placeholder="Min. 8 karakter" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
                             <p id="passwordHint" class="hidden text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">* Kosongkan jika tidak ingin mengubah</p>
                         </div>
-                        <!-- Nama Orang Tua -->
+                        
+                        <!-- NEW FIELDS START -->
+                        <!-- Agama -->
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Orang Tua / Wali</label>
-                            <input type="text" name="parent_name" id="field_parent_name" placeholder="Nama Ayah/Ibu/Wali" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Agama</label>
+                            <input type="text" name="religion" id="field_religion" placeholder="Contoh: Islam" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
                         </div>
+                        <!-- Pendidikan Sebelumnya -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Pendidikan Sebelumnya</label>
+                            <input type="text" name="previous_education" id="field_previous_education" placeholder="Contoh: SMP / MTs" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        
+                        <!-- Data Ayah -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Ayah</label>
+                            <input type="text" name="father_name" id="field_father_name" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Pekerjaan Ayah</label>
+                            <input type="text" name="father_occupation" id="field_father_occupation" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        
+                        <!-- Data Ibu -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Ibu</label>
+                            <input type="text" name="mother_name" id="field_mother_name" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Pekerjaan Ibu</label>
+                            <input type="text" name="mother_occupation" id="field_mother_occupation" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        
+                        <!-- Data Wali -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Nama Wali (Opsional)</label>
+                            <input type="text" name="guardian_name" id="field_guardian_name" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Pekerjaan Wali</label>
+                            <input type="text" name="guardian_occupation" id="field_guardian_occupation" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Alamat Wali</label>
+                            <textarea name="guardian_address" id="field_guardian_address" rows="2" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all"></textarea>
+                        </div>
+                        
+                        <!-- Alamat Detail -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Kelurahan / Desa</label>
+                            <input type="text" name="address_village" id="field_address_village" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Kecamatan</label>
+                            <input type="text" name="address_district" id="field_address_district" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Kabupaten / Kota</label>
+                            <input type="text" name="address_regency" id="field_address_regency" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Provinsi</label>
+                            <input type="text" name="address_province" id="field_address_province" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 placeholder-slate-300 transition-all">
+                        </div>
+                        <!-- NEW FIELDS END -->
+                        
                         <!-- Alamat -->
                         <div class="md:col-span-2 space-y-2">
                             <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Alamat Lengkap</label>
@@ -170,7 +231,8 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function editStudent(data) {
+        function editStudent(studentId) {
+            const data = JSON.parse(document.getElementById('student-data-' + studentId).textContent);
             document.getElementById('modalTitle').innerText = 'EDIT SISWA';
             document.getElementById('submitBtn').innerText = 'SIMPAN';
             document.getElementById('student_id').value = data.id;
@@ -185,8 +247,20 @@
             document.getElementById('field_gender').value = data.gender;
             document.getElementById('field_birth_place').value = data.birth_place;
             document.getElementById('field_birth_date').value = data.birth_date;
-            document.getElementById('field_parent_name').value = data.parent_name;
             document.getElementById('field_address').value = data.address;
+            document.getElementById('field_address_village').value = data.address_village || '';
+            document.getElementById('field_address_district').value = data.address_district || '';
+            document.getElementById('field_address_regency').value = data.address_regency || '';
+            document.getElementById('field_address_province').value = data.address_province || '';
+            document.getElementById('field_religion').value = data.religion || '';
+            document.getElementById('field_previous_education').value = data.previous_education || '';
+            document.getElementById('field_father_name').value = data.father_name || '';
+            document.getElementById('field_mother_name').value = data.mother_name || '';
+            document.getElementById('field_father_occupation').value = data.father_occupation || '';
+            document.getElementById('field_mother_occupation').value = data.mother_occupation || '';
+            document.getElementById('field_guardian_name').value = data.guardian_name || '';
+            document.getElementById('field_guardian_occupation').value = data.guardian_occupation || '';
+            document.getElementById('field_guardian_address').value = data.guardian_address || '';
             
             // Photo preview for edit
             if (data.photo_url) {
@@ -219,6 +293,12 @@
         function closeStudentImportModal() {
             document.getElementById('studentImportModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
+        }
+
+        function confirmDelete(url, name) {
+            if (confirm(`Apakah Anda yakin ingin menghapus data siswa ${name}?`)) {
+                window.location.href = url;
+            }
         }
     </script>
 
@@ -291,22 +371,43 @@
                             {% endif %}
                         </td>
                         <td class="px-8 py-5 text-right">
-                            <button onclick="editStudent({
-                                id: '{{ student.id }}',
-                                name: '{{ student.user.get_full_name|escapejs }}',
-                                email: '{{ student.user.email|default:""|escapejs }}',
-                                username: '{{ student.user.username|escapejs }}',
-                                nis: '{{ student.nis|default:""|escapejs }}',
-                                nisn: '{{ student.nisn|default:""|escapejs }}',
-                                class_id: '{{ student.class_level.id|default:"" }}',
-                                gender: '{{ student.gender|default:"" }}',
-                                birth_place: '{{ student.birth_place|default:""|escapejs }}',
-                                birth_date: '{{ student.birth_date|date:"Y-m-d" }}',
-                                parent_name: '{{ student.parent_name|default:""|escapejs }}',
-                                address: '{{ student.address|default:""|escapejs }}',
-                                photo_url: '{% if student.user.photo %}{{ student.user.photo.url }}{% endif %}'
-                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                            <a href="{% url 'view_report' %}?student_id={{ student.id }}" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Lihat Rapor">
+                                <i class="fas fa-file-invoice text-xs"></i>
+                            </a>
+                            <script type="application/json" id="student-data-{{ student.id }}">
+                                {
+                                    "id": "{{ student.id }}",
+                                    "name": "{{ student.user.get_full_name|escapejs }}",
+                                    "email": "{{ student.user.email|default:''|escapejs }}",
+                                    "username": "{{ student.user.username|escapejs }}",
+                                    "nis": "{{ student.nis|default:''|escapejs }}",
+                                    "nisn": "{{ student.nisn|default:''|escapejs }}",
+                                    "class_id": "{{ student.class_level.id|default:''|escapejs }}",
+                                    "gender": "{{ student.gender|default:''|escapejs }}",
+                                    "birth_place": "{{ student.birth_place|escapejs }}",
+                                    "birth_date": "{{ student.birth_date|date:'Y-m-d' }}",
+                                    "address": "{{ student.address|default:''|escapejs }}",
+                                    "address_village": "{{ student.address_village|default:''|escapejs }}",
+                                    "address_district": "{{ student.address_district|default:''|escapejs }}",
+                                    "address_regency": "{{ student.address_regency|default:''|escapejs }}",
+                                    "address_province": "{{ student.address_province|default:''|escapejs }}",
+                                    "religion": "{{ student.religion|default:''|escapejs }}",
+                                    "previous_education": "{{ student.previous_education|default:''|escapejs }}",
+                                    "father_name": "{{ student.father_name|default:''|escapejs }}",
+                                    "mother_name": "{{ student.mother_name|default:''|escapejs }}",
+                                    "father_occupation": "{{ student.father_occupation|default:''|escapejs }}",
+                                    "mother_occupation": "{{ student.mother_occupation|default:''|escapejs }}",
+                                    "guardian_name": "{{ student.guardian_name|default:''|escapejs }}",
+                                    "guardian_occupation": "{{ student.guardian_occupation|default:''|escapejs }}",
+                                    "guardian_address": "{{ student.guardian_address|default:''|escapejs }}",
+                                    "photo_url": "{% if student.user.photo %}{{ student.user.photo.url }}{% endif %}"
+                                }
+                            </script>
+                            <button onclick="editStudent('{{ student.id }}')" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
                                 <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="confirmDelete(this.dataset.url, this.dataset.name)" data-url="{% url 'delete_student' student.id %}" data-name="{{ student.user.get_full_name|escapejs }}" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1">
+                                <i class="fas fa-trash text-xs"></i>
                             </button>
                         </td>
                     </tr>

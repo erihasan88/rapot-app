@@ -51,6 +51,16 @@
                                 <option value="F">Fase F (Kelas 11-12)</option>
                             </select>
                         </div>
+                        <!-- Wali Kelas -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">Wali Kelas</label>
+                            <select name="homeroom_teacher_id" id="field_homeroom_teacher" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer">
+                                <option value="">Tidak ditetapkan</option>
+                                {% for t in teachers %}
+                                <option value="{{ t.id }}">{{ t.user.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="pt-6">
@@ -72,6 +82,7 @@
                         <th class="px-8 py-5">Nama</th>
                         <th class="px-8 py-5">Program</th>
                         <th class="px-8 py-5">Fase</th>
+                        <th class="px-8 py-5">Wali Kelas</th>
                         <th class="px-8 py-5 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -87,13 +98,20 @@
                         <td class="px-8 py-5">
                             <span class="text-sm font-medium text-slate-600">Fase {{ class.phase }}</span>
                         </td>
+                        <td class="px-8 py-5">
+                            <span class="text-sm font-medium text-slate-600">{{ class.homeroom_teacher.user.get_full_name|default:"-" }}</span>
+                        </td>
                         <td class="px-8 py-5 text-right">
-                            <button onclick="editClass({
-                                id: '{{ class.id }}',
-                                name: '{{ class.name }}',
-                                program: '{{ class.program }}',
-                                phase: '{{ class.phase }}'
-                            })" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+                            <script type="application/json" id="class-data-{{ class.id }}">
+                                {
+                                    "id": "{{ class.id }}",
+                                    "name": "{{ class.name|escapejs }}",
+                                    "program": "{{ class.program|escapejs }}",
+                                    "phase": "{{ class.phase|escapejs }}",
+                                    "homeroom_teacher_id": "{{ class.homeroom_teacher.id|default:'' }}"
+                                }
+                            </script>
+                            <button onclick="editClass('{{ class.id }}')" class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
                         </td>
@@ -121,13 +139,15 @@
         document.body.style.overflow = 'hidden';
     }
 
-    function editClass(data) {
+    function editClass(classId) {
+        const data = JSON.parse(document.getElementById('class-data-' + classId).textContent);
         document.getElementById('modalTitle').innerText = 'EDIT KELAS';
         document.getElementById('submitBtn').innerText = 'SIMPAN';
         document.getElementById('class_id').value = data.id;
         document.getElementById('field_name').value = data.name;
         document.getElementById('field_program').value = data.program;
         document.getElementById('field_phase').value = data.phase;
+        document.getElementById('field_homeroom_teacher').value = data.homeroom_teacher_id;
         document.getElementById('classModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }

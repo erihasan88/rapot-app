@@ -4,65 +4,171 @@
 {% block page_icon %}<i class="fas fa-th-large text-xs"></i>{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <div class="md:col-span-2 space-y-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h3 class="font-bold text-gray-800 mb-6">Nilai Harian & Keaktifan</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                        <tr>
-                            <th class="px-6 py-3 font-semibold">Mata Pelajaran</th>
-                            <th class="px-6 py-3 font-semibold text-center">Harian</th>
-                            <th class="px-6 py-3 font-semibold text-center">Keaktifan</th>
-                            <th class="px-6 py-3 font-semibold">Catatan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        {% for row in subject_rows %}
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-gray-900">{{ row.subject.name }}</td>
-                            <td class="px-6 py-4 text-center text-sm font-bold text-gray-700">{{ row.daily_test_grade|floatformat:0|default:"-" }}</td>
-                            <td class="px-6 py-4 text-center text-sm font-bold text-gray-700">{{ row.activity_score|floatformat:0|default:"-" }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500 line-clamp-2">{{ row.activity_note|default:"-" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">Nilai belum diinput oleh guru.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="space-y-8 max-w-5xl mx-auto">
+    <!-- Student Profile Header (Modern Card) -->
+    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 overflow-hidden relative group">
+        <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary/10 to-blue-50/50"></div>
+        <div class="px-10 pt-16 pb-10 relative flex flex-col md:flex-row items-center md:items-end gap-8">
+            <div class="relative">
+                <div class="w-40 h-40 rounded-3xl bg-white p-2 shadow-2xl shadow-slate-200 group-hover:scale-105 transition-transform duration-500">
+                    <div class="w-full h-full rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center text-primary text-4xl font-black">
+                        {% if user.photo %}
+                            <img src="{{ user.photo.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                            {{ user.first_name.0|upper }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="absolute -bottom-3 -right-3 w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
+                    <i class="fas fa-graduation-cap text-sm"></i>
+                </div>
+            </div>
+            <div class="flex-1 text-center md:text-left space-y-2">
+                <div class="inline-flex items-center px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest mb-2">
+                    {{ student.class_level.get_program_display }}
+                </div>
+                <h1 class="text-lg font-black text-primary uppercase tracking-widest mb-1">{{ school.name|default:"PKBM DARUL ULUM AGRABINTA" }}</h1>
+                <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tight">{{ user.get_full_name }}</h2>
+                <div class="flex flex-wrap justify-center md:justify-start items-center gap-6 pt-2">
+                    <div class="flex items-center text-slate-400 font-bold text-xs uppercase tracking-widest">
+                        <i class="fas fa-id-card mr-2 text-primary/50"></i>
+                        NISN: {{ student.nisn }}
+                    </div>
+                    <div class="flex items-center text-slate-400 font-bold text-xs uppercase tracking-widest">
+                        <i class="fas fa-school mr-2 text-primary/50"></i>
+                        KELAS: {{ student.class_level.name }}
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 md:pt-0">
+                <a href="{% url 'view_report' %}" class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/30 transition-all">
+                    <i class="fas fa-file-pdf mr-3"></i> LIHAT RAPOR
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="space-y-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <div class="mx-auto w-24 h-24 rounded-full bg-slate-200 mb-4 overflow-hidden flex items-center justify-center text-slate-500 font-bold text-2xl">
-                {% if user.photo %}
-                    <img src="{{ user.photo.url }}" class="w-full h-full object-cover">
-                {% else %}
-                    {{ user.username.0|upper }}
-                {% endif %}
-            </div>
-            <h3 class="font-bold text-gray-900 text-lg">{{ user.get_full_name }}</h3>
-            <p class="text-sm text-gray-500 mb-6">NISN: {{ student.nisn }}</p>
-            <div class="border-t border-gray-100 pt-6">
-                <div class="flex justify-between text-sm mb-2">
-                    <span class="text-gray-500">Kelas</span>
-                    <span class="font-medium text-gray-900">{{ student.class_level.name }}</span>
+    <!-- Main Identity Card (Modern Paper Style) -->
+    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-10 py-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                    <i class="fas fa-id-badge text-sm"></i>
                 </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Program</span>
-                    <span class="font-medium text-gray-900">{{ student.class_level.get_program_display }}</span>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">IDENTITAS PESERTA DIDIK</h3>
+            </div>
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-slate-100 shadow-sm">
+                DATA PRIBADI SISWA
+            </span>
+        </div>
+        
+        <div class="p-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-12">
+                <!-- Data Pribadi Section -->
+                <div class="space-y-10">
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] pb-2 border-b-2 border-primary/10 inline-block">INFORMASI DASAR</h4>
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Nama Lengkap</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ user.get_full_name }}</span>
+                            </div>
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">NISN / NIS</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ student.nisn }} / {{ student.nis|default:"-" }}</span>
+                            </div>
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">TTL</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ student.birth_place|default:"-" }}, {{ student.birth_date|date:"d F Y"|default:"-" }}</span>
+                            </div>
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Jenis Kelamin</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ student.get_gender_display }}</span>
+                            </div>
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Agama</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ student.religion|default:"-" }}</span>
+                            </div>
+                            <div class="flex items-start justify-between group">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Pendidikan Sebelumnya</span>
+                                <span class="text-sm font-black text-slate-800 text-right uppercase group-hover:text-primary transition-colors">{{ student.previous_education|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] pb-2 border-b-2 border-primary/10 inline-block">ALAMAT PESERTA DIDIK</h4>
+                        <div class="bg-slate-50/50 rounded-3xl p-6 space-y-4 border border-slate-100">
+                            <div class="flex justify-between">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Jalan/Dusun</span>
+                                <span class="text-xs font-bold text-slate-600 text-right">{{ student.address|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Desa/Kelurahan</span>
+                                <span class="text-xs font-bold text-slate-600 text-right">{{ student.address_village|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kecamatan</span>
+                                <span class="text-xs font-bold text-slate-600 text-right">{{ student.address_district|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kabupaten/Kota</span>
+                                <span class="text-xs font-bold text-slate-600 text-right">{{ student.address_regency|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Provinsi</span>
+                                <span class="text-xs font-bold text-slate-600 text-right">{{ student.address_province|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Orang Tua/Wali Section -->
+                <div class="space-y-10">
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] pb-2 border-b-2 border-primary/10 inline-block">DATA ORANG TUA</h4>
+                        <div class="grid grid-cols-1 gap-8">
+                            <div class="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 relative overflow-hidden group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                                <div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full flex items-center justify-center text-primary/20">
+                                    <i class="fas fa-male text-2xl"></i>
+                                </div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">AYAH KANDUNG</p>
+                                <p class="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">{{ student.father_name|default:"-" }}</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider italic">Pekerjaan: {{ student.father_occupation|default:"-" }}</p>
+                            </div>
+
+                            <div class="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 relative overflow-hidden group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                                <div class="absolute top-0 right-0 w-16 h-16 bg-pink-500/5 rounded-bl-full flex items-center justify-center text-pink-500/20">
+                                    <i class="fas fa-female text-2xl"></i>
+                                </div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">IBU KANDUNG</p>
+                                <p class="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">{{ student.mother_name|default:"-" }}</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider italic">Pekerjaan: {{ student.mother_occupation|default:"-" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] pb-2 border-b-2 border-primary/10 inline-block">DATA WALI SISWA</h4>
+                        <div class="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">NAMA WALI</p>
+                                <p class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ student.guardian_name|default:"-" }}</p>
+                            </div>
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">PEKERJAAN</p>
+                                <p class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">{{ student.guardian_occupation|default:"-" }}</p>
+                            </div>
+                            <div class="pt-4 border-t border-slate-100">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">ALAMAT WALI</p>
+                                <p class="text-[10px] font-bold text-slate-500 leading-relaxed">{{ student.guardian_address|default:"-" }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="mt-8">
-                <a href="{% url 'view_report' %}" class="w-full inline-flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition shadow-lg shadow-slate-200">
-                    <i class="fas fa-file-pdf mr-2"></i> Download Rapor
-                </a>
-            </div>
+
         </div>
     </div>
 </div>

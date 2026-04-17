@@ -41,7 +41,7 @@
         <!-- Student Info -->
         <div class="grid grid-cols-2 gap-8 mb-8 text-sm">
             <div class="space-y-2">
-                <div class="flex"><span class="w-32 font-medium text-gray-500">Nama Siswa</span><span class="font-bold text-gray-900">: {{ user.get_full_name|upper }}</span></div>
+                <div class="flex"><span class="w-32 font-medium text-gray-500">Nama Siswa</span><span class="font-bold text-gray-900">: {{ student.user.get_full_name|upper }}</span></div>
                 <div class="flex"><span class="w-32 font-medium text-gray-500">NISN</span><span class="text-gray-900">: {{ student.nisn }}</span></div>
                 <div class="flex"><span class="w-32 font-medium text-gray-500">Program</span><span class="text-gray-900">: {{ student.class_level.get_program_display }}</span></div>
             </div>
@@ -122,21 +122,50 @@
         </div>
 
         <!-- Signature -->
-        <div class="flex justify-between items-end mt-16 text-sm">
-            <div class="text-center">
-                <p class="mb-20 text-gray-900">Orang Tua/Wali</p>
-                <div class="w-40 border-b border-gray-900 mx-auto"></div>
+        <div class="grid grid-cols-3 gap-8 mt-16 text-sm text-center">
+            <div class="flex flex-col justify-between h-48">
+                <p class="text-gray-900">Orang Tua/Wali</p>
+                <div class="mt-auto">
+                    <p class="font-bold text-gray-900">(..........................)</p>
+                </div>
             </div>
-            <div class="text-center">
+            
+            <div class="flex flex-col justify-between h-48">
                 <p class="text-gray-900">Agrabinta, {{ today|date:"d F Y" }}</p>
-                <p class="mb-20 text-gray-900">Kepala PKBM Darul Ulum</p>
-                <div class="flex flex-col items-center -mt-16 mb-6 space-y-2">
-                    {% if school.signature %}
-                        <img src="{{ school.signature.url }}" class="h-16 object-contain">
+                <p class="text-gray-900">Wali Kelas</p>
+                <div class="flex flex-col items-center justify-center flex-grow py-2">
+                    {% if homeroom_teacher.signature %}
+                        <img src="{{ homeroom_teacher.signature.url }}" class="h-16 object-contain">
+                    {% else %}
+                        <div class="h-16"></div>
                     {% endif %}
                 </div>
-                <p class="font-bold text-gray-900">{{ school.principal_name }}</p>
-                <p class="text-xs text-gray-500">NIP. {{ school.nip|default:"-" }}</p>
+                <div class="mt-auto">
+                    <p class="font-bold text-gray-900">
+                        {% if homeroom_teacher %}
+                            {{ homeroom_teacher.user.get_full_name|default:homeroom_teacher.user.username }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500">NIP. {{ homeroom_teacher.nip|default:"-" }}</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col justify-between h-48">
+                <p class="text-gray-900 invisible">Spacer</p>
+                <p class="text-gray-900">Kepala PKBM Darul Ulum</p>
+                <div class="flex flex-col items-center justify-center flex-grow py-2">
+                    {% if school.signature %}
+                        <img src="{{ school.signature.url }}" class="h-16 object-contain">
+                    {% else %}
+                        <div class="h-16"></div>
+                    {% endif %}
+                </div>
+                <div class="mt-auto">
+                    <p class="font-bold text-gray-900">{{ school.principal_name }}</p>
+                    <p class="text-xs text-gray-500">NIP. {{ school.nip|default:"-" }}</p>
+                </div>
             </div>
         </div>
     </div>

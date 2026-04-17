@@ -20,9 +20,9 @@
                 <div class="relative">
                     <select name="ts_id" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus-ring-primary text-sm font-bold text-slate-900 appearance-none cursor-pointer">
                         <option value="">-- Pilih Penugasan --</option>
-                        {% for ts in teacher.teachersubject_set.all %}
+                        {% for ts in ts_list %}
                         <option value="{{ ts.id }}" {% if request.GET.ts_id == ts.id|stringformat:"s" %}selected{% endif %}>
-                            {{ ts.subject.name }} - {{ ts.class_level.name }}
+                            {{ ts.subject.name }} - {{ ts.class_level.name }} {% if request.user.role == 'ADMIN' %}({{ ts.teacher.user.get_full_name }}){% endif %}
                         </option>
                         {% endfor %}
                     </select>

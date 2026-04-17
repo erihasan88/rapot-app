@@ -55,8 +55,14 @@ class ClassLevel(models.Model):
         return f"{self.name} ({self.get_program_display()})"
 
 class Subject(models.Model):
+    PROGRAM_CHOICES = (
+        ('PAKET_B', 'Paket B (SMP)'),
+        ('PAKET_C', 'Paket C (SMA)'),
+        ('BOTH', 'Keduanya'),
+    )
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
+    program = models.CharField(max_length=20, choices=PROGRAM_CHOICES, default='BOTH')
 
     def __str__(self):
         return self.name
@@ -65,6 +71,7 @@ class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
     nip = models.CharField(max_length=50, unique=True, null=True, blank=True)
     subjects = models.ManyToManyField(Subject, through='TeacherSubject')
+    signature = models.ImageField(upload_to='teacher/signatures/', null=True, blank=True)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
@@ -91,6 +98,22 @@ class Student(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     parent_name = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
+    address_village = models.CharField(max_length=100, null=True, blank=True)
+    address_district = models.CharField(max_length=100, null=True, blank=True)
+    address_regency = models.CharField(max_length=100, null=True, blank=True)
+    address_province = models.CharField(max_length=100, null=True, blank=True)
+    
+    religion = models.CharField(max_length=20, null=True, blank=True)
+    previous_education = models.CharField(max_length=100, null=True, blank=True)
+    
+    father_name = models.CharField(max_length=255, null=True, blank=True)
+    mother_name = models.CharField(max_length=255, null=True, blank=True)
+    father_occupation = models.CharField(max_length=100, null=True, blank=True)
+    mother_occupation = models.CharField(max_length=100, null=True, blank=True)
+    
+    guardian_name = models.CharField(max_length=255, null=True, blank=True)
+    guardian_occupation = models.CharField(max_length=100, null=True, blank=True)
+    guardian_address = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username

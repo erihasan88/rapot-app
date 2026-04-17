@@ -10,7 +10,8 @@ from django.db.models import Count, Avg, Sum, Max, Min
 from decimal import Decimal, InvalidOperation
 from django.http import HttpResponse
 from io import BytesIO
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from django.utils import timezone
 
 try:
     from openpyxl import Workbook, load_workbook
@@ -115,6 +116,12 @@ def is_teacher(user):
 def is_student(user):
     return user.is_authenticated and user.role == 'STUDENT'
 
+def is_admin_or_teacher(user):
+    return user.is_authenticated and (user.role == 'ADMIN' or user.role == 'TEACHER')
+
+def is_admin_or_student(user):
+    return user.is_authenticated and (user.role == 'ADMIN' or user.role == 'STUDENT')
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -123,6 +130,11 @@ def dashboard(request):
     }
     
     if user.role == 'ADMIN':
+        thirty_mins_ago = timezone.now() - timedelta(minutes=30)
+        active_users = User.objects.filter(
+            last_login__gte=thirty_mins_ago
+        ).exclude(id=user.id).order_by('-last_login')[:10]
+
         context.update({
             'student_count': Student.objects.count(),
             'teacher_count': Teacher.objects.count(),
@@ -132,6 +144,7 @@ def dashboard(request):
             'paket_b_count': Student.objects.filter(class_level__program='PAKET_B').count(),
             'paket_c_count': Student.objects.filter(class_level__program='PAKET_C').count(),
             'active_year': AcademicYear.objects.filter(is_active=True).first(),
+            'active_users': active_users,
         })
         return render(request, 'apps_main/admin_dashboard.html', context)
     
@@ -155,8 +168,12 @@ def dashboard(request):
         active_year = AcademicYear.objects.filter(is_active=True).first()
         grades = Grade.objects.filter(student=student, academic_year=active_year).select_related('subject')
         activities = SubjectActivity.objects.filter(student=student, academic_year=active_year).select_related('subject')
+        
+        # Get school profile for principal info
+        school = SchoolProfile.objects.first()
 
         rows_by_subject = {}
+        # ... rest of the code
         for g in grades:
             rows_by_subject[g.subject_id] = {
                 'subject': g.subject,
@@ -182,6 +199,8 @@ def dashboard(request):
             'student': student,
             'active_year': active_year,
             'subject_rows': subject_rows,
+            'school': school,
+            'today': date.today(),
         })
         return render(request, 'apps_main/student_dashboard.html', context)
     
@@ -196,13 +215,27 @@ def manage_students(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         nis = request.POST.get('nis')
+        nis = nis.strip() if nis and nis.strip() else None
         nisn = request.POST.get('nisn')
+        nisn = nisn.strip() if nisn and nisn.strip() else None
         class_id = request.POST.get('class_id')
         gender = request.POST.get('gender')
         birth_place = request.POST.get('birth_place')
         birth_date = request.POST.get('birth_date')
-        parent_name = request.POST.get('parent_name')
         address = request.POST.get('address')
+        address_village = request.POST.get('address_village')
+        address_district = request.POST.get('address_district')
+        address_regency = request.POST.get('address_regency')
+        address_province = request.POST.get('address_province')
+        religion = request.POST.get('religion')
+        previous_education = request.POST.get('previous_education')
+        father_name = request.POST.get('father_name')
+        mother_name = request.POST.get('mother_name')
+        father_occupation = request.POST.get('father_occupation')
+        mother_occupation = request.POST.get('mother_occupation')
+        guardian_name = request.POST.get('guardian_name')
+        guardian_occupation = request.POST.get('guardian_occupation')
+        guardian_address = request.POST.get('guardian_address')
         
         try:
             if student_id:
@@ -218,6 +251,16 @@ def manage_students(request):
                 # Check if new email is already taken by ANOTHER user
                 if email and User.objects.exclude(id=user.id).filter(email=email).exists():
                     messages.error(request, f"Gagal: Email '{email}' sudah terdaftar di sistem.")
+                    return redirect('manage_students')
+                    
+                # Check if NISN is already taken by ANOTHER student
+                if nisn and Student.objects.exclude(id=student_id).filter(nisn=nisn).exists():
+                    messages.error(request, f"Gagal: NISN '{nisn}' sudah digunakan oleh siswa lain.")
+                    return redirect('manage_students')
+                    
+                # Check if NIS is already taken by ANOTHER student
+                if nis and Student.objects.exclude(id=student_id).filter(nis=nis).exists():
+                    messages.error(request, f"Gagal: NIS '{nis}' sudah digunakan oleh siswa lain.")
                     return redirect('manage_students')
 
                 user.username = username
@@ -239,8 +282,20 @@ def manage_students(request):
                 student.gender = gender
                 student.birth_place = birth_place
                 student.birth_date = birth_date if birth_date else None
-                student.parent_name = parent_name
                 student.address = address
+                student.address_village = address_village
+                student.address_district = address_district
+                student.address_regency = address_regency
+                student.address_province = address_province
+                student.religion = religion
+                student.previous_education = previous_education
+                student.father_name = father_name
+                student.mother_name = mother_name
+                student.father_occupation = father_occupation
+                student.mother_occupation = mother_occupation
+                student.guardian_name = guardian_name
+                student.guardian_occupation = guardian_occupation
+                student.guardian_address = guardian_address
                 student.save()
                 messages.success(request, f"Data siswa {full_name} berhasil diperbarui!")
             else:
@@ -251,6 +306,14 @@ def manage_students(request):
                 
                 if email and User.objects.filter(email=email).exists():
                     messages.error(request, f"Gagal: Email '{email}' sudah terdaftar. Gunakan email lain.")
+                    return redirect('manage_students')
+                    
+                if nisn and Student.objects.filter(nisn=nisn).exists():
+                    messages.error(request, f"Gagal: NISN '{nisn}' sudah terdaftar.")
+                    return redirect('manage_students')
+                    
+                if nis and Student.objects.filter(nis=nis).exists():
+                    messages.error(request, f"Gagal: NIS '{nis}' sudah terdaftar.")
                     return redirect('manage_students')
 
                 # Create User first
@@ -278,8 +341,20 @@ def manage_students(request):
                     gender=gender,
                     birth_place=birth_place,
                     birth_date=birth_date if birth_date else None,
-                    parent_name=parent_name,
-                    address=address
+                    address=address,
+                    address_village=address_village,
+                    address_district=address_district,
+                    address_regency=address_regency,
+                    address_province=address_province,
+                    religion=religion,
+                    previous_education=previous_education,
+                    father_name=father_name,
+                    mother_name=mother_name,
+                    father_occupation=father_occupation,
+                    mother_occupation=mother_occupation,
+                    guardian_name=guardian_name,
+                    guardian_occupation=guardian_occupation,
+                    guardian_address=guardian_address
                 )
                 messages.success(request, f"Siswa {full_name} berhasil ditambahkan!")
         except Exception as e:
@@ -294,6 +369,15 @@ def manage_students(request):
         'classes': classes,
         'page_title': 'Manajemen Siswa'
     })
+
+@user_passes_test(is_admin)
+def delete_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    full_name = student.user.get_full_name() or student.user.username
+    user = student.user
+    user.delete() # Ini akan menghapus Student profile juga karena CASCADE
+    messages.success(request, f"Data siswa {full_name} berhasil dihapus!")
+    return redirect('manage_students')
 
 @user_passes_test(is_admin)
 def export_students_excel(request):
@@ -466,7 +550,7 @@ def manage_teachers(request):
         email = request.POST.get('email')
         username = request.POST.get('username')
         password = request.POST.get('password')
-        nip = request.POST.get('nip')
+        nip = request.POST.get('nip') or None
         homeroom_class_id = request.POST.get('homeroom_class_id')
         
         # Get assignments (Subject-Class pairs)
@@ -496,6 +580,9 @@ def manage_teachers(request):
                 user.save()
                 
                 teacher.nip = nip
+                signature = request.FILES.get('signature')
+                if signature:
+                    teacher.signature = signature
                 teacher.save()
 
                 # Update assignments
@@ -538,7 +625,8 @@ def manage_teachers(request):
                 )
                 
                 # Create Teacher profile
-                teacher = Teacher.objects.create(user=user, nip=nip)
+                signature = request.FILES.get('signature')
+                teacher = Teacher.objects.create(user=user, nip=nip, signature=signature)
 
                 # Create assignments
                 for s_id, c_id in zip(subject_ids, class_ids):
@@ -572,6 +660,15 @@ def manage_teachers(request):
     })
 
 @user_passes_test(is_admin)
+def delete_teacher(request, teacher_id):
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    full_name = teacher.user.get_full_name() or teacher.user.username
+    user = teacher.user
+    user.delete() # CASCADE will delete Teacher profile and assignments
+    messages.success(request, f"Data guru {full_name} berhasil dihapus!")
+    return redirect('manage_teachers')
+
+@user_passes_test(is_admin)
 def export_teachers_excel(request):
     if Workbook is None:
         messages.error(request, "Fitur Excel belum tersedia. Install dulu: pip install openpyxl")
@@ -589,7 +686,7 @@ def export_teachers_excel(request):
             t.user.username,
             t.user.get_full_name(),
             t.user.email or "",
-            t.nip or "",
+            t.nip or "-",
             homeroom.name if homeroom else "",
         ])
 
@@ -644,7 +741,7 @@ def import_teachers_excel(request):
     for row_num, row in enumerate(rows[1:], start=2):
         username = str(get(row, "username", "")).strip()
         full_name = str(get(row, "full_name", "")).strip()
-        nip = str(get(row, "nip", "")).strip()
+        nip = str(get(row, "nip", "")).strip() or None
         if not username or not full_name:
             continue
 
@@ -675,8 +772,7 @@ def import_teachers_excel(request):
                     user.set_password(password)
                 user.save()
 
-                if nip:
-                    teacher.nip = nip
+                teacher.nip = nip
                 teacher.save()
                 updated_count += 1
             else:
@@ -751,6 +847,7 @@ def manage_classes(request):
         name = request.POST.get('name')
         program = request.POST.get('program')
         phase = request.POST.get('phase')
+        homeroom_teacher_id = request.POST.get('homeroom_teacher_id')
         
         try:
             if class_id:
@@ -759,34 +856,58 @@ def manage_classes(request):
                 class_obj.name = name
                 class_obj.program = program
                 class_obj.phase = phase
+                if homeroom_teacher_id:
+                    class_obj.homeroom_teacher_id = homeroom_teacher_id
+                else:
+                    class_obj.homeroom_teacher = None
                 class_obj.save()
                 messages.success(request, f"Kelas {name} berhasil diperbarui!")
             else:
                 # Create new class
-                ClassLevel.objects.create(name=name, program=program, phase=phase)
+                ClassLevel.objects.create(
+                    name=name, 
+                    program=program, 
+                    phase=phase,
+                    homeroom_teacher_id=homeroom_teacher_id if homeroom_teacher_id else None
+                )
                 messages.success(request, f"Kelas {name} berhasil ditambahkan!")
         except Exception as e:
             messages.error(request, f"Gagal memproses data kelas: {str(e)}")
             
         return redirect('manage_classes')
 
-    classes = ClassLevel.objects.all().order_by('program', 'name')
-    return render(request, 'apps_main/manage_classes.html', {'classes': classes, 'page_title': 'Manajemen Kelas'})
+    classes = ClassLevel.objects.all().order_by('program', 'name').select_related('homeroom_teacher__user')
+    teachers = Teacher.objects.all().select_related('user').order_by('user__first_name')
+    return render(request, 'apps_main/manage_classes.html', {
+        'classes': classes, 
+        'teachers': teachers,
+        'page_title': 'Manajemen Kelas'
+    })
 
 @user_passes_test(is_admin)
 def manage_subjects(request):
     if request.method == 'POST':
         subject_id = request.POST.get('subject_id')
         name = request.POST.get('name')
+        program = request.POST.get('program', 'BOTH')
         
         try:
             if subject_id:
                 subject = get_object_or_404(Subject, id=subject_id)
                 subject.name = name
+                subject.program = program
                 subject.save()
                 messages.success(request, f"Mata pelajaran {name} berhasil diperbarui!")
             else:
-                Subject.objects.create(name=name)
+                # Generate a unique code if it doesn't exist
+                code = name.upper().replace(' ', '_')[:15]
+                base_code = code
+                counter = 1
+                while Subject.objects.filter(code=code).exists():
+                    code = f"{base_code}_{counter}"
+                    counter += 1
+                
+                Subject.objects.create(name=name, code=code, program=program)
                 messages.success(request, f"Mata pelajaran {name} berhasil ditambahkan!")
         except Exception as e:
             messages.error(request, f"Gagal memproses data: {str(e)}")
@@ -941,22 +1062,39 @@ def manage_settings(request):
         'color_options': color_options
     })
 
-@user_passes_test(is_teacher)
+@user_passes_test(is_admin_or_teacher)
 def input_grades(request):
-    teacher = get_object_or_404(Teacher, user=request.user)
+    if request.user.role == 'ADMIN':
+        teacher = None
+        ts_list = TeacherSubject.objects.all().select_related('subject', 'class_level', 'teacher__user')
+    else:
+        teacher = get_object_or_404(Teacher, user=request.user)
+        ts_list = teacher.teachersubject_set.all().select_related('subject', 'class_level')
+        
     active_year = AcademicYear.objects.filter(is_active=True).first()
     ts_id = request.GET.get('ts_id')
     
     students = []
     if ts_id:
-        ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+        if request.user.role == 'ADMIN':
+            ts = get_object_or_404(TeacherSubject, id=ts_id)
+        else:
+            ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+            
         students = Student.objects.filter(class_level=ts.class_level)
         for s in students:
             s.current_grade = Grade.objects.filter(student=s, subject=ts.subject, academic_year=active_year).first()
             s.current_activity = SubjectActivity.objects.filter(student=s, subject=ts.subject, academic_year=active_year).first()
             
     if request.method == 'POST':
-        ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+        if request.user.role == 'ADMIN':
+            ts = get_object_or_404(TeacherSubject, id=ts_id)
+            # Use the teacher assigned to this subject for saving
+            effective_teacher = ts.teacher
+        else:
+            ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+            effective_teacher = teacher
+
         for s in students:
             daily = request.POST.get(f'daily_{s.id}')
             midterm = request.POST.get(f'midterm_{s.id}')
@@ -977,7 +1115,7 @@ def input_grades(request):
                         'final_exam_grade': final_exam or None,
                         'numeric_grade': report_grade,
                         'description': final_desc,
-                        'teacher': teacher
+                        'teacher': effective_teacher
                     }
                 )
 
@@ -987,7 +1125,7 @@ def input_grades(request):
                     defaults={
                         'activity_score': activity_score or None,
                         'activity_note': (activity_note or '').strip(),
-                        'teacher': teacher
+                        'teacher': effective_teacher
                     }
                 )
         messages.success(request, "Nilai berhasil disimpan!")
@@ -995,7 +1133,11 @@ def input_grades(request):
 
     class_stats = None
     if ts_id and students:
-        ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+        if request.user.role == 'ADMIN':
+            ts = get_object_or_404(TeacherSubject, id=ts_id)
+        else:
+            ts = get_object_or_404(TeacherSubject, id=ts_id, teacher=teacher)
+            
         qs = Grade.objects.filter(
             academic_year=active_year,
             subject=ts.subject,
@@ -1020,42 +1162,70 @@ def input_grades(request):
 
     return render(request, 'apps_main/input_grades.html', {
         'teacher': teacher,
+        'ts_list': ts_list,
         'students': students,
         'page_title': 'Input Nilai',
         'class_stats': class_stats,
     })
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm
+    REPORTLAB_INSTALLED = True
+except ImportError:
+    REPORTLAB_INSTALLED = False
 
-@user_passes_test(is_teacher)
+@user_passes_test(is_admin_or_teacher)
 def student_detail_input(request, student_id):
-    teacher = get_object_or_404(Teacher, user=request.user)
-    student = get_object_or_404(Student, id=student_id)
+    if request.user.role == 'ADMIN':
+        student = get_object_or_404(Student, id=student_id)
+        # Admin doesn't need teacher profile check
+    else:
+        teacher = get_object_or_404(Teacher, user=request.user)
+        student = get_object_or_404(Student, id=student_id)
+        
     active_year = AcademicYear.objects.filter(is_active=True).first()
+    if not active_year:
+        messages.error(request, "Belum ada Tahun Ajaran aktif.")
+        return redirect('dashboard')
     
     attendance, _ = Attendance.objects.get_or_create(student=student, academic_year=active_year)
     attitude, _ = Attitude.objects.get_or_create(student=student, academic_year=active_year)
     note, _ = TeacherNote.objects.get_or_create(student=student, academic_year=active_year)
     
+    # Check if current user is the homeroom teacher for this student
+    is_homeroom = False
+    if request.user.role == 'ADMIN':
+        is_homeroom = True
+    elif request.user.role == 'TEACHER':
+        teacher = get_object_or_404(Teacher, user=request.user)
+        if student.class_level and student.class_level.homeroom_teacher == teacher:
+            is_homeroom = True
+
     if request.method == 'POST':
-        # Attendance
-        attendance.sakit = request.POST.get('sakit', 0)
-        attendance.izin = request.POST.get('izin', 0)
-        attendance.alpha = request.POST.get('alpha', 0)
-        attendance.save()
+        # Attendance (Only if homeroom or admin)
+        if is_homeroom:
+            sakit = request.POST.get('sakit')
+            izin = request.POST.get('izin')
+            alpha = request.POST.get('alpha')
+            
+            attendance.sakit = int(sakit) if sakit and sakit.isdigit() else 0
+            attendance.izin = int(izin) if izin and izin.isdigit() else 0
+            attendance.alpha = int(alpha) if alpha and alpha.isdigit() else 0
+            attendance.save()
         
         # Attitude
         attitude.score = request.POST.get('attitude_score')
         attitude.description = request.POST.get('attitude_desc')
         attitude.save()
         
-        # Note
-        note.notes = request.POST.get('notes')
-        note.save()
+        # Note (Only if homeroom or admin)
+        if is_homeroom:
+            note.notes = request.POST.get('notes')
+            note.save()
         
         # P5 (Single project for demo simplicity)
         p5_title = request.POST.get('p5_title')
@@ -1076,25 +1246,49 @@ def student_detail_input(request, student_id):
         'attendance': attendance,
         'attitude': attitude,
         'note': note,
+        'is_homeroom': is_homeroom,
         'p5': P5Project.objects.filter(student=student, academic_year=active_year).first(),
         'page_title': f'Detail Rapor: {student.user.get_full_name()}'
     }
     return render(request, 'apps_main/student_detail_input.html', context)
 
-@user_passes_test(is_student)
+@user_passes_test(is_admin_or_student)
 def view_report(request):
-    student = get_object_or_404(Student, user=request.user)
+    if request.user.role == 'ADMIN':
+        student_id = request.GET.get('student_id')
+        if student_id:
+            student = get_object_or_404(Student.objects.select_related('class_level__homeroom_teacher__user', 'user'), id=student_id)
+        else:
+            # If no student_id provided for admin, show first student or handle error
+            student = Student.objects.select_related('class_level__homeroom_teacher__user', 'user').first()
+            if not student:
+                messages.error(request, "Belum ada data siswa.")
+                return redirect('dashboard')
+    else:
+        student = get_object_or_404(Student.objects.select_related('class_level__homeroom_teacher__user', 'user'), user=request.user)
+    
     active_year = AcademicYear.objects.filter(is_active=True).first()
-    grades = Grade.objects.filter(student=student, academic_year=active_year)
+    if not active_year:
+        messages.error(request, "Belum ada Tahun Ajaran aktif. Silakan atur di menu Tahun Ajaran.")
+        return redirect('dashboard')
+        
+    grades = Grade.objects.filter(student=student, academic_year=active_year).select_related('subject')
     attendance = Attendance.objects.filter(student=student, academic_year=active_year).first()
     p5 = P5Project.objects.filter(student=student, academic_year=active_year)
     note = TeacherNote.objects.filter(student=student, academic_year=active_year).first()
     attitude = Attitude.objects.filter(student=student, academic_year=active_year).first()
     school = SchoolProfile.objects.first()
     
+    homeroom_teacher = student.class_level.homeroom_teacher if student.class_level else None
+    
     if request.GET.get('format') == 'pdf':
+        if not REPORTLAB_INSTALLED:
+            messages.error(request, "Fitur PDF belum tersedia. Silakan install reportlab (pip install reportlab)")
+            return redirect('view_report')
+            
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="rapor_{student.user.username}_{active_year.year.replace("/", "_")}.pdf"'
+        filename = f"rapor_{student.user.username}_{active_year.year.replace('/', '_')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -1103,17 +1297,20 @@ def view_report(request):
         
         # Header
         title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], alignment=1, fontSize=14, spaceAfter=10)
-        elements.append(Paragraph(school.name.upper(), title_style))
-        elements.append(Paragraph(school.address, styles['Normal']))
+        elements.append(Paragraph(school.name.upper() if school else "PKBM DARUL ULUM", title_style))
+        elements.append(Paragraph(school.address if school else "-", styles['Normal']))
         elements.append(Spacer(1, 0.5*cm))
         elements.append(Paragraph(f"LAPORAN HASIL BELAJAR (RAPOR)", title_style))
         elements.append(Spacer(1, 0.5*cm))
         
         # Student Info
+        class_name = student.class_level.name if student.class_level else "Belum Diatur"
+        program_name = student.class_level.get_program_display() if student.class_level else "Belum Diatur"
+        
         info_data = [
-            [f"Nama Siswa: {student.user.get_full_name().upper()}", f"Kelas: {student.class_level.name}"],
+            [f"Nama Siswa: {student.user.get_full_name().upper()}", f"Kelas: {class_name}"],
             [f"NISN: {student.nisn}", f"Semester: {active_year.get_semester_display()}"],
-            [f"Program: {student.class_level.get_program_display()}", f"Tahun Ajaran: {active_year.year}"]
+            [f"Program: {program_name}", f"Tahun Ajaran: {active_year.year}"]
         ]
         info_table = Table(info_data, colWidths=[10*cm, 7*cm])
         info_table.setStyle(TableStyle([
@@ -1182,7 +1379,7 @@ def view_report(request):
 
         # Signature
         principal_images = []
-        if school.signature and hasattr(school.signature, 'path'):
+        if school and school.signature and hasattr(school.signature, 'path'):
             try:
                 principal_images.append(Image(school.signature.path, width=5*cm, height=2*cm))
             except Exception:
@@ -1190,17 +1387,31 @@ def view_report(request):
         else:
             principal_images.append(Spacer(1, 2*cm))
 
+        homeroom_images = []
+        if homeroom_teacher and homeroom_teacher.signature and hasattr(homeroom_teacher.signature, 'path'):
+            try:
+                homeroom_images.append(Image(homeroom_teacher.signature.path, width=5*cm, height=2*cm))
+            except Exception:
+                homeroom_images.append(Spacer(1, 2*cm))
+        else:
+            homeroom_images.append(Spacer(1, 2*cm))
+
+        homeroom_name = "-"
+        if homeroom_teacher:
+            homeroom_name = homeroom_teacher.user.get_full_name() or homeroom_teacher.user.username
+
         sig_data = [
-            ["Orang Tua/Wali", "", f"Agrabinta, {date.today().strftime('%d %B %Y')}"],
-            ["", "", "Kepala PKBM Darul Ulum"],
-            ["", "", principal_images],
-            ["(..........................)", "", f"<b>{school.principal_name}</b>"],
-            ["", "", f"NIP. {school.nip if school.nip else '-'}"],
+            ["Orang Tua/Wali", f"Agrabinta, {date.today().strftime('%d %B %Y')}", ""],
+            ["", "Wali Kelas", "Kepala PKBM Darul Ulum"],
+            ["", homeroom_images[0] if homeroom_images else "", principal_images[0] if principal_images else ""],
+            ["(..........................)", f"<b>{homeroom_name}</b>", f"<b>{school.principal_name if school else '-'}</b>"],
+            ["", f"NIP. {homeroom_teacher.nip if homeroom_teacher and homeroom_teacher.nip else '-'}", f"NIP. {school.nip if school and school.nip else '-'}"],
         ]
-        sig_table = Table(sig_data, colWidths=[6*cm, 5*cm, 6*cm])
+        sig_table = Table(sig_data, colWidths=[6*cm, 5.5*cm, 5.5*cm])
         sig_table.setStyle(TableStyle([
             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
             ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ]))
         elements.append(sig_table)
         
@@ -1219,6 +1430,7 @@ def view_report(request):
         'note': note,
         'attitude': attitude,
         'school': school,
+        'homeroom_teacher': homeroom_teacher,
         'page_title': 'Rapor Siswa',
         'today': date.today()
     }
